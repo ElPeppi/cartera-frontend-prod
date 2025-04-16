@@ -1,0 +1,113 @@
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #f0f4f8;
+    color: #343a40;
+}
+
+#topbar {
+    background-color: #546e7a;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#topbar h2 {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+}
+
+#topbar p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.wrapper {
+    padding-top: 60px;
+    display: flex;
+}
+
+#sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #e9ecef;
+    padding-top: 20px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    position: fixed;
+    top: 60px;
+    left: 0;
+}
+
+#sidebar.collapsed {
+    width: 60px;
+}
+
+#sidebar.collapsed .sidebar-header h3,
+#sidebar.collapsed ul li a span {
+    display: none;
+}
+
+#sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+#sidebar ul li a {
+    display: block;
+    padding: 10px 15px;
+    color: #495057;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+
+#sidebar ul li a i {
+    margin-right: 10px;
+}
+
+#sidebar ul li a:hover {
+    background-color: #dee2e6;
+}
+
+#content {
+    display: flex  ;
+
+    align-items: center;
+
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+    margin-left: 250px;
+    width: 70%;
+}
+
+#content.expanded {
+    margin-left: 60px;
+}
+.table{
+    font-size: 80%;
+}
+#sidebarCollapse {
+    position: absolute;
+    top: 10px;
+    right: -25px;
+    width: 25px;
+    height: 25px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 0.25rem;
+}
+
+.mt-5 {
+    align-items: center;
+}
