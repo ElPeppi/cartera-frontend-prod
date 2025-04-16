@@ -79,22 +79,25 @@ body {
 }
 
 #content {
-    display: flex  ;
-
-    align-items: center;
-
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 20px;
     transition: margin-left 0.3s ease;
-    margin-left: 250px;
-    width: 70%;
+    margin-left: 260px; /* ligeramente separado del sidebar */
+    width: calc(100% - 260px); /* ocupar el resto del espacio */
 }
+
+
 
 #content.expanded {
     margin-left: 60px;
 }
-.table{
+
+.table {
     font-size: 80%;
 }
+
 #sidebarCollapse {
     position: absolute;
     top: 10px;
@@ -110,4 +113,22 @@ body {
 
 .mt-5 {
     align-items: center;
+}
+
+/* NUEVO: Estilo para que las tablas de multas y documentos estén una al lado de la otra */
+.periodo-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.tabla-periodo {
+    flex: 1 1 500px;
+    min-width: 300px;
+}
+
+/* Opcional: Forzar tabla a no hacer scroll horizontal */
+.table-responsive {
+    overflow-x: visible;
 }
