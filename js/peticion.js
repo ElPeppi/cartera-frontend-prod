@@ -92,12 +92,12 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     for (const periodo in periodos) {
       const grupo = periodos[periodo];
       const bloque = document.createElement("div");
-      bloque.className = "tabla-periodo";
+      bloque.className = "tabla-periodo table-responsive";
       bloque.id = `tabla-${periodo.replace("-", "")}`;
       contenedor.appendChild(bloque);
   
       const titulo = document.createElement("h3");
-      titulo.textContent = `Multas del periodo ${periodo}`;
+      titulo.textContent = `Cartera por derechos de tránsito ${periodo}`;
       bloque.appendChild(titulo);
   
       if (grupo.length === 0) {
@@ -119,14 +119,14 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
           </thead>
           <tbody>
             ${grupo.map(data => {
-              const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`.replaceAll('"', '');
+              const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
               return `
                 <tr>
-                  <td>${(data.DESC_DOCUMENTO || "").replaceAll('"', '')}</td>
-                  <td>${(data.ID_USUARIO || "").replaceAll('"', '')}</td>
+                  <td>${(data.DESC_DOCUMENTO || "")}</td>
+                  <td>${(data.ID_USUARIO || "")}</td>
                   <td>${nombre}</td>
-                  <td>${(data.NRO_PLACA || "").replaceAll('"', '')}</td>
-                  <td>${(data.ANNO || "").replaceAll('"', '')}</td>
+                  <td>${(data.NRO_PLACA || "")}</td>
+                  <td>${(data.ANNO || "")}</td>
                 </tr>
               `;
             }).join("")}
@@ -159,7 +159,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
                 <td>${doc.TIPO_DOCUMENTO}</td>
                 <td>${doc.DOCUMENTO}</td>
                 <td>${doc.FECHA}</td>
-                <td><a href="https://storage.googleapis.com/cartera_bucket/imagenes/gestion/actos/${doc.DOCUMENTO}" target="_blank">${doc.DOCUMENTO}</a></td>
+                <td><a href="https://litis.s3.us-east-1.amazonaws.com/pdfs/${doc.RUTA}/${doc.DOCUMENTO}" target="_blank">${doc.DOCUMENTO}</a></td>
               </tr>
             `).join("")}
           </tbody>
@@ -176,7 +176,7 @@ function aplicarFiltros() {
 
   let filtradas = [...todasLasMultas];
   if (placaSeleccionada !== "") {
-    filtradas = filtradas.filter((m) => (m.NRO_PLACA || "").replaceAll('"', '') === placaSeleccionada);
+    filtradas = filtradas.filter((m) => (m.NRO_PLACA || "") === placaSeleccionada);
   }
 
   mostrarTablasPorPeriodo(filtradas, todosLosDocumentos);
