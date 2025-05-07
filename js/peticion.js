@@ -89,9 +89,11 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
     todosLosDocumentos,
     placaSeleccionada
   );
+
   const select = document.getElementById("time");
-  select.innerHTML = `<option value="">Selecciona el periodo</option>`;
+  select.innerHTML = `<option value="">Expediente [año1 - año2]</option>`;
   periodos.forEach((periodo) => {
+
     const option = document.createElement("option");
     option.value = periodo;
     option.textContent = periodo;
@@ -152,29 +154,20 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     tablaMultas.innerHTML = `
         <thead>
           <tr>
-            <th>DESC DOCUMENTO</th>
-            <th>ID USUARIO</th>
-            <th>NRO PLACA</th>
-            <th>AÑO</th>
-            <th>NRO PLACA AÑO</th>
-            <th>NOMBRE COMPLETO</th>
-            <th>TELEFONO</th>
-            <th>NOMBRE CIUDAD</th>
-            <th>NOMBRE DEPARTAMENTO</th>
-            <th>DIRECCIÓN</th>
-            <th>EMAIL</th>
-            <th>COSTAS</th>
-            <th>DERECHOS</th>
-            <th>DESC ESTADO</th>
-            <th>ESTADO VIGENCIA</th>
-            <th>INTERESES</th>
-          </tr>
+                  <th>TIPO ACTO</th>
+                  <th>NOMBRE COMPLETO</th>
+                  <th>TIPO DOCUMENTO</th>
+                  <th>AÑO</th>
+                  <th>FECHA DOCUMENTO</th>
+                  <th>URL DOCUMENTO</th>
+                  <th>URL GUIA</th>
+            </tr>
         </thead>
         <tbody>
           ${filas
-            .map((data) => {
-              const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
-              return `
+        .map((data) => {
+          const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
+          return `
               <tr>
                 <td>${data.DESC_DOCUMENTO || ""}</td>
                 <td>${data.ID_USUARIO || ""}</td>
@@ -193,8 +186,8 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
                 <td>${data.ESTADO_VIGENCIA || ""}</td>
                 <td>${data.INTERESES || ""}</td>
               </tr>`;
-            })
-            .join("")}
+        })
+        .join("")}
         </tbody>
       `;
     bloque.appendChild(tablaMultas);
@@ -207,8 +200,8 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   }
 
   if (docs.length > 0) {
-    const tituloDocs = document.createElement("h4");
-    tituloDocs.textContent = "Documentos disponibles";
+    const tituloDocs = document.createElement("h3");
+    tituloDocs.textContent = "PQR";
     bloque.appendChild(tituloDocs);
 
     const tablaDocs = document.createElement("table");
@@ -216,27 +209,25 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     tablaDocs.innerHTML = `
       <thead>
         <tr>
-          <th>TIPO_DOCUMENTO</th>
-          <th>DOCUMENTO</th>
+          <th>RADICADO</th>
           <th>FECHA</th>
           <th>URL</th>
         </tr>
       </thead>
       <tbody>
         ${docs
-          .map(
-            (doc) => `
+        .map(
+          (doc) => `
           <tr>
             <td>${doc.TIPO_DOCUMENTO}</td>
-            <td>${doc.DOCUMENTO}</td>
             <td>${doc.FECHA}</td>
             <td><a href="${sanearURL(
-              `https://litis.s3.us-east-1.amazonaws.com/pdfs/${doc.RUTA}/${doc.DOCUMENTO}`
-            )}" target="_blank">${doc.DOCUMENTO}</a></td>
+            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${doc.RUTA}/${doc.DOCUMENTO}`
+          )}" target="_blank">${doc.DOCUMENTO}</a></td>
           </tr>
         `
-          )
-          .join("")}
+        )
+        .join("")}
       </tbody>`;
     bloque.appendChild(tablaDocs);
   }
@@ -262,6 +253,7 @@ function aplicarFiltros() {
 
   const bloques = document.querySelectorAll(".tabla-periodo");
   bloques.forEach((bloque) => {
+
     if (
       periodoSeleccionado === "" ||
       bloque.id === `tabla-${periodoSeleccionado.replace("-", "")}`

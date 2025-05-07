@@ -29,6 +29,16 @@ body {
     margin-bottom: 0;
     font-size: 0.875rem;
 }
+.table-header{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.table-tittle{
+    margin-right: 0.7rem;
+}
 
 .wrapper {
     padding-top: 60px;
@@ -92,10 +102,18 @@ body {
 
 #content.expanded {
     margin-left: 60px;
+    width: calc(100% - 60px);
 }
 
 .table {
     font-size: 80%;
+}
+.table td,
+.table th {
+  white-space: normal !important;
+  word-break: break-word;
+  max-width: 200px; /* Puedes ajustar el ancho */
+  vertical-align: middle;
 }
 
 #sidebarCollapse {
@@ -124,11 +142,12 @@ body {
 }
 
 .tabla-periodo {
-    flex: 1 1 500px;
-    min-width: 300px;
+    width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* Opcional: Forzar tabla a no hacer scroll horizontal */
 .table-responsive {
-    overflow-x: visible;
+    overflow-x: auto;
 }
