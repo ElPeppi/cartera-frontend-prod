@@ -1,6 +1,8 @@
 // Asume que ya se cargó la respuesta y están en "todasLasMultas"
 let todasLasMultas = [];
 let todosLosDocumentos = [];
+//quiero obtener la lista de contenerdores con clase continner
+const contenedores = document.querySelectorAll('.container');
 
 // Selectores globales
 const placaSelect = document.getElementById("placas");
@@ -21,7 +23,109 @@ async function consultarMultasCedula() {
     );
 
     const result = await response.json();
+    console.log(result);
     const primerItem = result[0];
+    const segundoItem = result[1];
+    console.log(primerItem);
+    console.log(segundoItem);
+    const bodyDataMultas =
+      typeof primerItem.body === "string"
+        ? JSON.parse(primerItem.body)
+        : primerItem.body;
+    const bodyDataDocumentos =
+      typeof segundoItem.body === "string"
+        ? JSON.parse(segundoItem.body)
+        : segundoItem.body;
+
+    const multas = bodyDataMultas.cartera || [];
+    const documentos = bodyDataDocumentos.documentos || [];
+
+    todasLasMultas = multas;
+    todosLosDocumentos = documentos;
+
+    // Llenar selector de placas
+    placaSelect.innerHTML = "";
+    const optionDefault = document.createElement("option");
+    optionDefault.value = "";
+    optionDefault.textContent = "Todas las Placas";
+    placaSelect.appendChild(optionDefault);
+
+    const placasUnicas = [
+      ...new Set(multas.map((m) => m.NRO_PLACA).filter(Boolean)),
+    ];
+    placasUnicas.forEach((placa) => {
+      const option = document.createElement("option");
+      option.value = placa;
+      option.textContent = placa;
+      placaSelect.appendChild(option);
+    });
+
+    document.querySelector(".plate").style.display = "block";
+    llenarSelectPeriodos(); // Llenar sin placa seleccionada
+    aplicarFiltros();
+  } catch (error) {
+    console.error("Error al consultar multas:", error);
+  }
+}
+async function consultar(htmlBoton) {
+  //saber en que contenedor se hizo la consulta
+  const contenedor = htmlBoton.closest('.view');
+  if (contenedor) {
+    const contenedorId = contenedor.id;
+    for (const contenedor of contenedores) {
+      if (contenedorId.includes("plate")){
+        if(contenedorId.includes("wallet")){
+          const plate = contenedor.querySelector("#param1").value;
+          peticion('NRO_PLACA', plate);
+        }
+        else{
+          const plate = contenedor.querySelector("#param1").value;
+          peticion('NRO_PLACA', plate);
+        }
+      }
+      else{
+        if(contenedorId.includes("wallet")){
+          const user_id = contenedor.querySelector("#param1").value;
+          peticion('ID_USUARIO', user_id);
+        }
+        else{
+          const user_id = contenedor.querySelector("#param1").value;
+          peticion('ID_USUARIO', user_id);
+        }
+      }
+    }
+  }
+  console.log(contenedor);
+  const placa = document.getElementById("param1").value;
+
+
+}
+async function peticion(parametro, tipo){
+  try {
+    let response;
+    if (parametro === "ID_USUARIO") {
+      response = await fetch(
+        "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ID_USUARIO: tipo }),
+        }
+      );
+    }
+    if (parametro === "NRO_PLACA") {
+      response = await fetch(
+        "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ NRO_PLACA: tipo }),
+        }
+      );
+    }
+
+    const result = await response.json();
+    const primerItem = result[0]; 
     const segundoItem = result[1];
 
     const bodyDataMultas =
@@ -69,17 +173,16 @@ function obtenerPeriodosDesdeDocumentos(documentos, placa = "") {
   documentos.forEach((doc) => {
     if (!doc.ANNO) return;
     if (placa && doc.NRO_PLACA !== placa) return;
-    annos.add(parseInt(doc.ANNO));
+    annos.add((doc.ANNO));
   });
 
-  const sorted = Array.from(annos).sort((a, b) => a - b);
+  const sorted = Array.from(annos).sort();
+  console.log(sorted);
   const periodos = [];
-  for (let i = 0; i < sorted.length; i += 2) {
-    if (i + 1 < sorted.length) {
-      periodos.push(`${sorted[i]}-${sorted[i + 1]}`);
-    } else {
+  for (let i = 0; i < sorted.length; i ++) {
+    
       periodos.push(`${sorted[i]}`);
-    }
+    
   }
   return periodos;
 }
@@ -143,7 +246,10 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   for (let a = desde; a <= hasta; a++) {
     if (multasPorPeriodo[a]) filas.push(...multasPorPeriodo[a]);
   }
-
+  const docs = [];
+  for (let a = desde; a <= hasta; a++) {
+    if (documentosPorPeriodo[a]) docs.push(...documentosPorPeriodo[a]);
+  }
   if (filas.length === 0) {
     const mensaje = document.createElement("p");
     mensaje.textContent = "No hay registros para este intervalo de fechas.";
@@ -164,27 +270,23 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
             </tr>
         </thead>
         <tbody>
-          ${filas
+          ${docs
         .map((data) => {
+          console.log(data);
           const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
           return `
               <tr>
+                <td>${data.TIPO_ACTO || ""}</td>
+                <td>${data.NOMBRE_APELLIDO || ""}</td>
                 <td>${data.DESC_DOCUMENTO || ""}</td>
-                <td>${data.ID_USUARIO || ""}</td>
-                <td>${data.NRO_PLACA || ""}</td>
                 <td>${data.ANNO || ""}</td>
-                <td>${data["NRO_PLACA#ANNO"] || ""}</td>
-                <td>${nombre}</td>
-                <td>${data.TELEFONO || ""}</td>
-                <td>${data.NOMBRE_CIUDAD || ""}</td>
-                <td>${data.NOMBRE_DEPARTAMENTO || ""}</td>
-                <td>${data.DIRECCION || ""}</td>
-                <td>${data.EMAIL || ""}</td>
-                <td>${data.COSTAS || ""}</td>
-                <td>${data.DERECHOS || ""}</td>
-                <td>${data.DESC_ESTADO || ""}</td>
-                <td>${data.ESTADO_VIGENCIA || ""}</td>
-                <td>${data.INTERESES || ""}</td>
+                <td>${data.FECHA || ""}</td>
+                <td><a href="${sanearURL(
+            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`
+          )}" target="_blank">${data.DOCUMENTO}</a></td>
+                <td><a href="${sanearURL(
+            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}/${data.GUIA}`
+          )}" target="_blank">${data.GUIA}</a></td>
               </tr>`;
         })
         .join("")}
@@ -193,11 +295,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     bloque.appendChild(tablaMultas);
   }
 
-  // Documentos debajo
-  const docs = [];
-  for (let a = desde; a <= hasta; a++) {
-    if (documentosPorPeriodo[a]) docs.push(...documentosPorPeriodo[a]);
-  }
+
 
   if (docs.length > 0) {
     const tituloDocs = document.createElement("h3");
