@@ -5,9 +5,10 @@ let todosLosDocumentos = [];
 const contenedores = document.querySelectorAll('.container');
 
 // Selectores globales
-const placaSelect = document.getElementById("placas");
-const periodoSelect = document.getElementById("time");
+let placaSelect = document.getElementById("placas");
+let periodoSelect = document.getElementById("time");
 
+let container;
 // Consulta de multas por cédula
 async function consultarMultasCedula() {
   const user_id = document.getElementById("param1").value;
@@ -42,7 +43,8 @@ async function consultarMultasCedula() {
 
     todasLasMultas = multas;
     todosLosDocumentos = documentos;
-
+    
+    
     // Llenar selector de placas
     placaSelect.innerHTML = "";
     const optionDefault = document.createElement("option");
@@ -67,42 +69,39 @@ async function consultarMultasCedula() {
     console.error("Error al consultar multas:", error);
   }
 }
-async function consultar(htmlBoton) {
+async function consultarDT(htmlBoton) {
   //saber en que contenedor se hizo la consulta
   const contenedor = htmlBoton.closest('.view');
+  container = contenedor;
   if (contenedor) {
     const contenedorId = contenedor.id;
-    for (const contenedor of contenedores) {
+    
       if (contenedorId.includes("plate")){
-        if(contenedorId.includes("wallet")){
           const plate = contenedor.querySelector("#param1").value;
-          peticion('NRO_PLACA', plate);
-        }
-        else{
-          const plate = contenedor.querySelector("#param1").value;
-          peticion('NRO_PLACA', plate);
-        }
+          console.log(plate);
+          peticion('NRO_PLACA', plate, contenedor);
+          console.log("wallet con placa");
       }
       else{
-        if(contenedorId.includes("wallet")){
-          const user_id = contenedor.querySelector("#param1").value;
-          peticion('ID_USUARIO', user_id);
-        }
-        else{
-          const user_id = contenedor.querySelector("#param1").value;
-          peticion('ID_USUARIO', user_id);
+          const plate = contenedor.querySelector("#param1").value;
+          peticion('ID_USUARIO', plate, contenedor);
+          console.log("sin wallet con placa");
         }
       }
-    }
-  }
+      
+    
+  
   console.log(contenedor);
   const placa = document.getElementById("param1").value;
 
 
 }
-async function peticion(parametro, tipo){
+async function peticion(parametro, tipo, contenedor){
   try {
     let response;
+    console.log("Peticion");
+    console.log(parametro);
+    console.log(tipo);
     if (parametro === "ID_USUARIO") {
       response = await fetch(
         "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production",
@@ -127,7 +126,7 @@ async function peticion(parametro, tipo){
     const result = await response.json();
     const primerItem = result[0]; 
     const segundoItem = result[1];
-
+console.log(result);
     const bodyDataMultas =
       typeof primerItem.body === "string"
         ? JSON.parse(primerItem.body)
@@ -142,17 +141,33 @@ async function peticion(parametro, tipo){
 
     todasLasMultas = multas;
     todosLosDocumentos = documentos;
+    console.log("todas las multas", todasLasMultas);
+    if(parametro === "NRO_PLACA"){
+      placaSelect = contenedor.querySelector("#identifitacions");
+      periodoSelect = contenedor.querySelector("#time");
+    } else {
+      placaSelect = contenedor.querySelector("#placas");
+      periodoSelect = contenedor.querySelector("#time");
+    }
+    
 
-    // Llenar selector de placas
     placaSelect.innerHTML = "";
     const optionDefault = document.createElement("option");
     optionDefault.value = "";
     optionDefault.textContent = "Todas las Placas";
     placaSelect.appendChild(optionDefault);
 
-    const placasUnicas = [
-      ...new Set(multas.map((m) => m.NRO_PLACA).filter(Boolean)),
-    ];
+    let placasUnicas ;
+    if(parametro === "NRO_PLACA"){
+      placasUnicas = [
+        ...new Set(multas.map((m) => m.ID_USUARIO).filter(Boolean)),
+      ];
+    }
+    else{
+      placasUnicas = [
+        ...new Set(documentos.map((m) => m.NRO_PLACA).filter(Boolean)),
+      ];
+    }
     placasUnicas.forEach((placa) => {
       const option = document.createElement("option");
       option.value = placa;
@@ -167,36 +182,43 @@ async function peticion(parametro, tipo){
     console.error("Error al consultar multas:", error);
   }
 }
-function obtenerPeriodosDesdeDocumentos(documentos, placa = "") {
+function obtenerPeriodosDesdeDocumentos(documentos, placas = []) {
   let annos = new Set();
 
   documentos.forEach((doc) => {
     if (!doc.ANNO) return;
-    if (placa && doc.NRO_PLACA !== placa) return;
-    annos.add((doc.ANNO));
+    if (placas.length > 0 && !placas.includes(doc.NRO_PLACA)) return;
+    annos.add(doc.ANNO);
   });
 
-  const sorted = Array.from(annos).sort();
-  console.log(sorted);
-  const periodos = [];
-  for (let i = 0; i < sorted.length; i ++) {
-    
-      periodos.push(`${sorted[i]}`);
-    
-  }
-  return periodos;
+  return Array.from(annos).sort();
 }
 
-function llenarSelectPeriodos(placaSeleccionada = "") {
-  const periodos = obtenerPeriodosDesdeDocumentos(
-    todosLosDocumentos,
-    placaSeleccionada
-  );
 
-  const select = document.getElementById("time");
+function llenarSelectPeriodos(placaSeleccionada = "") {
+  const containerID = container.id;
+  let placasAsociadas = [];
+
+  if (containerID.includes("plate")) {
+    // Si seleccionaste una identificación (ID_USUARIO)
+    if (placaSeleccionada) {
+      placasAsociadas = [
+        ...new Set(todasLasMultas
+          .filter(m => String(m.ID_USUARIO) === String(placaSeleccionada))
+          .map(m => m.NRO_PLACA)
+          .filter(Boolean))
+      ];
+    }
+  } else {
+    // Si estás en modo por cédula normal, filtras directo por placa
+    placasAsociadas = [placaSeleccionada];
+  }
+
+  const periodos = obtenerPeriodosDesdeDocumentos(todosLosDocumentos, placasAsociadas);
+
+  const select = container.querySelector("#time");
   select.innerHTML = `<option value="">Expediente [año1 - año2]</option>`;
   periodos.forEach((periodo) => {
-
     const option = document.createElement("option");
     option.value = periodo;
     option.textContent = periodo;
@@ -204,8 +226,9 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
   });
 }
 
+
 function mostrarTablasPorPeriodo(multas, documentos = []) {
-  const contenedor = document.querySelector(".table-responsive");
+  const contenedor = container.querySelector(".table-responsive");
   contenedor.innerHTML = "";
 
   const placa = placaSelect.value;
@@ -225,7 +248,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   const documentosPorPeriodo = {};
   documentos.forEach((d) => {
     const anno = parseInt(d.ANNO);
-    if (placa && d.NRO_PLACA !== placa) return;
+    if ((placa && d.NRO_PLACA !== placa) && (placa && d.ID_USUARIO !== placa)) return;
     if (!documentosPorPeriodo[anno]) documentosPorPeriodo[anno] = [];
     documentosPorPeriodo[anno].push(d);
   });
@@ -293,7 +316,8 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
         </tbody>
       `;
     bloque.appendChild(tablaMultas);
-  }
+    console.log(bloque)
+;  }
 
 
 
@@ -337,19 +361,31 @@ function sanearURL(url) {
 }
 
 function aplicarFiltros() {
+  const containerID = container.id;
   const placaSeleccionada = placaSelect.value;
+  console.log("placa seleccionada " +placaSeleccionada);
   const periodoSeleccionado = periodoSelect.value;
 
   let filtradas = [...todasLasMultas];
-  if (placaSeleccionada !== "") {
-    filtradas = filtradas.filter(
-      (m) => (m.NRO_PLACA || "") === placaSeleccionada
-    );
+  if (containerID.includes("plate")) {
+    if(placaSeleccionada !== ""){
+      filtradas = filtradas.filter(
+        (m) => (String(m.ID_USUARIO) || "") === String(placaSeleccionada)
+      );
+    }
+    console.log("estoy en placa");
+  }
+  else{
+    if (placaSeleccionada !== "") {
+      filtradas = filtradas.filter(
+        (m) => (m.NRO_PLACA || "") === placaSeleccionada
+      );
+    }
   }
 
   mostrarTablasPorPeriodo(filtradas, todosLosDocumentos);
 
-  const bloques = document.querySelectorAll(".tabla-periodo");
+  const bloques = container.querySelectorAll(".tabla-periodo");
   bloques.forEach((bloque) => {
 
     if (
@@ -364,15 +400,15 @@ function aplicarFiltros() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  if (placaSelect) {
-    placaSelect.addEventListener("change", () => {
+  document.addEventListener("change", (e) => {
+    if (e.target && e.target.matches("#placas, #identifitacions")) {
       aplicarFiltros();
-      llenarSelectPeriodos(placaSelect.value); // Filtrar años por placa
-    });
-  }
-
-  if (periodoSelect) {
-    periodoSelect.addEventListener("change", aplicarFiltros);
-  }
+      llenarSelectPeriodos(e.target.value);
+    }
+    if (e.target && e.target.matches("#time")) {
+      aplicarFiltros();
+    }
+  });
 });
+
 
