@@ -200,7 +200,6 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
   let placasAsociadas = [];
 
   if (containerID.includes("plate")) {
-    // Si seleccionaste una identificación (ID_USUARIO)
     if (placaSeleccionada) {
       placasAsociadas = [
         ...new Set(todasLasMultas
@@ -210,21 +209,40 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
       ];
     }
   } else {
-    // Si estás en modo por cédula normal, filtras directo por placa
     placasAsociadas = [placaSeleccionada];
   }
 
   const periodos = obtenerPeriodosDesdeDocumentos(todosLosDocumentos, placasAsociadas);
-
   const select = container.querySelector("#time");
   select.innerHTML = `<option value="">Expediente [año1 - año2]</option>`;
-  periodos.forEach((periodo) => {
+
+  if (periodos.length === 0) return;
+
+  const periodosNumericos = periodos.map(p => parseInt(p)).filter(n => !isNaN(n));
+  periodosNumericos.sort((a, b) => a - b);
+
+  const rangos = [];
+  for (let i = 0; i < periodosNumericos.length - 1; i++) {
+    const inicio = periodosNumericos[i];
+    const fin = periodosNumericos[i + 1];
+
+    // Evitar duplicados
+    const clave = `${inicio}-${fin}`;
+    if (!rangos.includes(clave) && inicio !== fin) {
+      rangos.push(clave);
+    }
+  }
+
+  // Si solo hay un año, puedes decidir si mostrarlo o no. Este ejemplo lo oculta.
+
+  rangos.forEach(rango => {
     const option = document.createElement("option");
-    option.value = periodo;
-    option.textContent = periodo;
+    option.value = rango;
+    option.textContent = rango;
     select.appendChild(option);
   });
 }
+
 
 
 function mostrarTablasPorPeriodo(multas, documentos = []) {
@@ -262,7 +280,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   contenedor.appendChild(bloque);
 
   const titulo = document.createElement("h3");
-  titulo.textContent = `Cartera por derechos de tránsito ${periodoSeleccionado}`;
+  titulo.textContent = `Documentos por derechos de tránsito ${periodoSeleccionado}`;
   bloque.appendChild(titulo);
 
   const filas = [];
@@ -302,7 +320,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
                 <td>${data.TIPO_ACTO || ""}</td>
                 <td>${data.NOMBRE_APELLIDO || ""}</td>
                 <td>${data.DESC_DOCUMENTO || ""}</td>
-                <td>${data.ANNO || ""}</td>
+                <td>${data.ANNO.replaceAll(".0","") || ""}</td>
                 <td>${data.FECHA || ""}</td>
                 <td><a href="${sanearURL(
             `https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`
@@ -320,7 +338,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
 ;  }
 
 
-
+/*
   if (docs.length > 0) {
     const tituloDocs = document.createElement("h3");
     tituloDocs.textContent = "PQR";
@@ -353,6 +371,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
       </tbody>`;
     bloque.appendChild(tablaDocs);
   }
+*/
 }
 
 
