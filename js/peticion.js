@@ -2,7 +2,7 @@
 let todasLasMultas = [];
 let todosLosDocumentos = [];
 //quiero obtener la lista de contenerdores con clase continner
-const contenedores = document.querySelectorAll('.container');
+const contenedores = document.querySelectorAll(".container");
 
 // Selectores globales
 let placaSelect = document.getElementById("placas");
@@ -24,11 +24,8 @@ async function consultarMultasCedula() {
     );
 
     const result = await response.json();
-    console.log(result);
     const primerItem = result[0];
     const segundoItem = result[1];
-    console.log(primerItem);
-    console.log(segundoItem);
     const bodyDataMultas =
       typeof primerItem.body === "string"
         ? JSON.parse(primerItem.body)
@@ -43,8 +40,7 @@ async function consultarMultasCedula() {
 
     todasLasMultas = multas;
     todosLosDocumentos = documentos;
-    
-    
+
     // Llenar selector de placas
     placaSelect.innerHTML = "";
     const optionDefault = document.createElement("option");
@@ -71,37 +67,25 @@ async function consultarMultasCedula() {
 }
 async function consultarDT(htmlBoton) {
   //saber en que contenedor se hizo la consulta
-  const contenedor = htmlBoton.closest('.view');
+  const contenedor = htmlBoton.closest(".view");
   container = contenedor;
   if (contenedor) {
     const contenedorId = contenedor.id;
-    
-      if (contenedorId.includes("plate")){
-          const plate = contenedor.querySelector("#param1").value;
-          console.log(plate);
-          peticion('NRO_PLACA', plate, contenedor);
-          console.log("wallet con placa");
-      }
-      else{
-          const plate = contenedor.querySelector("#param1").value;
-          peticion('ID_USUARIO', plate, contenedor);
-          console.log("sin wallet con placa");
-        }
-      }
-      
-    
-  
-  console.log(contenedor);
+
+    if (contenedorId.includes("plate")) {
+      const plate = contenedor.querySelector("#param1").value;
+      peticion("NRO_PLACA", plate, contenedor);
+    } else {
+      const plate = contenedor.querySelector("#param1").value;
+      peticion("ID_USUARIO", plate, contenedor);
+    }
+  }
+
   const placa = document.getElementById("param1").value;
-
-
 }
-async function peticion(parametro, tipo, contenedor){
+async function peticion(parametro, tipo, contenedor) {
   try {
     let response;
-    console.log("Peticion");
-    console.log(parametro);
-    console.log(tipo);
     if (parametro === "ID_USUARIO") {
       response = await fetch(
         "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production",
@@ -124,9 +108,8 @@ async function peticion(parametro, tipo, contenedor){
     }
 
     const result = await response.json();
-    const primerItem = result[0]; 
+    const primerItem = result[0];
     const segundoItem = result[1];
-console.log(result);
     const bodyDataMultas =
       typeof primerItem.body === "string"
         ? JSON.parse(primerItem.body)
@@ -141,15 +124,13 @@ console.log(result);
 
     todasLasMultas = multas;
     todosLosDocumentos = documentos;
-    console.log("todas las multas", todasLasMultas);
-    if(parametro === "NRO_PLACA"){
+    if (parametro === "NRO_PLACA") {
       placaSelect = contenedor.querySelector("#identifitacions");
       periodoSelect = contenedor.querySelector("#time");
     } else {
       placaSelect = contenedor.querySelector("#placas");
       periodoSelect = contenedor.querySelector("#time");
     }
-    
 
     placaSelect.innerHTML = "";
     const optionDefault = document.createElement("option");
@@ -157,13 +138,12 @@ console.log(result);
     optionDefault.textContent = "Todas las Placas";
     placaSelect.appendChild(optionDefault);
 
-    let placasUnicas ;
-    if(parametro === "NRO_PLACA"){
+    let placasUnicas;
+    if (parametro === "NRO_PLACA") {
       placasUnicas = [
         ...new Set(multas.map((m) => m.ID_USUARIO).filter(Boolean)),
       ];
-    }
-    else{
+    } else {
       placasUnicas = [
         ...new Set(documentos.map((m) => m.NRO_PLACA).filter(Boolean)),
       ];
@@ -194,36 +174,70 @@ function obtenerPeriodosDesdeDocumentos(documentos, placas = []) {
   return Array.from(annos).sort();
 }
 
-
 function llenarSelectPeriodos(placaSeleccionada = "") {
   const containerID = container.id;
   let placasAsociadas = [];
 
   if (containerID.includes("plate")) {
-    // Si seleccionaste una identificación (ID_USUARIO)
     if (placaSeleccionada) {
       placasAsociadas = [
-        ...new Set(todasLasMultas
-          .filter(m => String(m.ID_USUARIO) === String(placaSeleccionada))
-          .map(m => m.NRO_PLACA)
-          .filter(Boolean))
+        ...new Set(
+          todosLosDocumentos
+            .filter((m) => String(m.ID_USUARIO) === String(placaSeleccionada))
+            .map((m) => m.NRO_PLACA)
+            .filter(Boolean)
+        ),
       ];
     }
   } else {
-    // Si estás en modo por cédula normal, filtras directo por placa
     placasAsociadas = [placaSeleccionada];
   }
 
-  const periodos = obtenerPeriodosDesdeDocumentos(todosLosDocumentos, placasAsociadas);
-
+  const periodos = obtenerPeriodosDesdeDocumentos(
+    todosLosDocumentos,
+    placasAsociadas
+  );
   const select = container.querySelector("#time");
   select.innerHTML = `<option value="">Expediente [año1 - año2]</option>`;
-  periodos.forEach((periodo) => {
+
+  if (periodos.length === 0) return;
+
+  const periodosNumericos = periodos
+    .map((p) => parseInt(p))
+    .filter((n) => !isNaN(n));
+  periodosNumericos.sort((a, b) => a - b);
+
+  const rangos = agruparAniosEnPeriodos(periodosNumericos);
+
+  rangos.forEach(([inicio, fin]) => {
     const option = document.createElement("option");
-    option.value = periodo;
-    option.textContent = periodo;
+    const label = `${inicio}-${fin}`;
+    option.value = label;
+    option.textContent = label;
     select.appendChild(option);
   });
+}
+
+function agruparAniosEnPeriodos(anios) {
+  const rangos = [];
+
+  const grupos = [
+    [2004, 2010],
+    [2011, 2015],
+    [2016, 2017],
+    [2018, 2019],
+    [2020, 2021],
+    [2022, 2023],
+  ];
+
+  grupos.forEach(([inicio, fin]) => {
+    const tieneDatos = anios.some((a) => a >= inicio && a <= fin);
+    if (tieneDatos) {
+      rangos.push([inicio, fin]);
+    }
+  });
+
+  return rangos;
 }
 
 
@@ -234,26 +248,21 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   const placa = placaSelect.value;
   const periodoSeleccionado = periodoSelect.value;
 
-  if (!periodoSeleccionado) return; // No mostrar nada si no hay periodo seleccionado
-
-  // Agrupar multas por año
-  const multasPorPeriodo = {};
-  multas.forEach((m) => {
-    const anno = parseInt(m.ANNO);
-    if (!multasPorPeriodo[anno]) multasPorPeriodo[anno] = [];
-    multasPorPeriodo[anno].push(m);
-  });
-
-  // Agrupar documentos por año
-  const documentosPorPeriodo = {};
-  documentos.forEach((d) => {
-    const anno = parseInt(d.ANNO);
-    if ((placa && d.NRO_PLACA !== placa) && (placa && d.ID_USUARIO !== placa)) return;
-    if (!documentosPorPeriodo[anno]) documentosPorPeriodo[anno] = [];
-    documentosPorPeriodo[anno].push(d);
-  });
+  if (!periodoSeleccionado) return;
 
   const [desde, hasta] = periodoSeleccionado.split("-").map(Number);
+
+  // Filtrar los años dentro del rango seleccionado
+  const multasFiltradas = multas.filter((m) => {
+    const anno = parseInt(m.ANNO);
+    return anno >= desde && anno <= hasta;
+  });
+
+  const documentosFiltrados = documentos.filter((d) => {
+    const anno = parseInt(d.ANNO);
+    if (placa && d.NRO_PLACA !== placa && d.ID_USUARIO !== placa) return false;
+    return anno >= desde && anno <= hasta;
+  });
 
   const periodoKey = `tabla-${periodoSeleccionado.replace("-", "")}`;
   const bloque = document.createElement("div");
@@ -262,97 +271,47 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
   contenedor.appendChild(bloque);
 
   const titulo = document.createElement("h3");
-  titulo.textContent = `Cartera por derechos de tránsito ${periodoSeleccionado}`;
+  titulo.textContent = `Documentos por derechos de tránsito ${periodoSeleccionado}`;
   bloque.appendChild(titulo);
 
-  const filas = [];
-  for (let a = desde; a <= hasta; a++) {
-    if (multasPorPeriodo[a]) filas.push(...multasPorPeriodo[a]);
-  }
-  const docs = [];
-  for (let a = desde; a <= hasta; a++) {
-    if (documentosPorPeriodo[a]) docs.push(...documentosPorPeriodo[a]);
-  }
-  if (filas.length === 0) {
+  if (documentosFiltrados.length === 0) {
     const mensaje = document.createElement("p");
     mensaje.textContent = "No hay registros para este intervalo de fechas.";
     bloque.appendChild(mensaje);
-  } else {
-    const tablaMultas = document.createElement("table");
-    tablaMultas.className = "table table-striped";
-    tablaMultas.innerHTML = `
-        <thead>
-          <tr>
-                  <th>TIPO ACTO</th>
-                  <th>NOMBRE COMPLETO</th>
-                  <th>TIPO DOCUMENTO</th>
-                  <th>AÑO</th>
-                  <th>FECHA DOCUMENTO</th>
-                  <th>URL DOCUMENTO</th>
-                  <th>URL GUIA</th>
-            </tr>
-        </thead>
-        <tbody>
-          ${docs
-        .map((data) => {
-          console.log(data);
-          const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
-          return `
-              <tr>
-                <td>${data.TIPO_ACTO || ""}</td>
-                <td>${data.NOMBRE_APELLIDO || ""}</td>
-                <td>${data.DESC_DOCUMENTO || ""}</td>
-                <td>${data.ANNO || ""}</td>
-                <td>${data.FECHA || ""}</td>
-                <td><a href="${sanearURL(
-            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`
-          )}" target="_blank">${data.DOCUMENTO}</a></td>
-                <td><a href="${sanearURL(
-            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}/${data.GUIA}`
-          )}" target="_blank">${data.GUIA}</a></td>
-              </tr>`;
-        })
-        .join("")}
-        </tbody>
-      `;
-    bloque.appendChild(tablaMultas);
-    console.log(bloque)
-;  }
-
-
-
-  if (docs.length > 0) {
-    const tituloDocs = document.createElement("h3");
-    tituloDocs.textContent = "PQR";
-    bloque.appendChild(tituloDocs);
-
-    const tablaDocs = document.createElement("table");
-    tablaDocs.className = "table table-bordered";
-    tablaDocs.innerHTML = `
-      <thead>
-        <tr>
-          <th>RADICADO</th>
-          <th>FECHA</th>
-          <th>URL</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${docs
-        .map(
-          (doc) => `
-          <tr>
-            <td>${doc.TIPO_DOCUMENTO}</td>
-            <td>${doc.FECHA}</td>
-            <td><a href="${sanearURL(
-            `https://litis.s3.us-east-1.amazonaws.com/pdfs/${doc.RUTA}/${doc.DOCUMENTO}`
-          )}" target="_blank">${doc.DOCUMENTO}</a></td>
-          </tr>
-        `
-        )
-        .join("")}
-      </tbody>`;
-    bloque.appendChild(tablaDocs);
+    return;
   }
+
+  const tabla = document.createElement("table");
+  tabla.className = "table table-striped";
+  tabla.innerHTML = `
+    <thead>
+      <tr>
+        <th>TIPO ACTO</th>
+        <th>NOMBRE COMPLETO</th>
+        <th>TIPO DOCUMENTO</th>
+        <th>AÑO</th>
+        <th>FECHA DOCUMENTO</th>
+        <th>URL DOCUMENTO</th>
+        <th>URL GUIA</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${documentosFiltrados.map((data) => {
+        const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
+        return `
+          <tr>
+            <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
+            <td>${data.NOMBRE_APELLIDO || nombre}</td>
+            <td>${data.DESC_DOCUMENTO || ""}</td>
+            <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
+            <td>${data.FECHA || ""}</td>
+            <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
+            <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}/${data.GUIA}`)}" target="_blank">${data.GUIA}</a></td>
+          </tr>`;
+      }).join("")}
+    </tbody>
+  `;
+  bloque.appendChild(tabla);
 }
 
 
@@ -363,19 +322,17 @@ function sanearURL(url) {
 function aplicarFiltros() {
   const containerID = container.id;
   const placaSeleccionada = placaSelect.value;
-  console.log("placa seleccionada " +placaSeleccionada);
   const periodoSeleccionado = periodoSelect.value;
 
   let filtradas = [...todasLasMultas];
   if (containerID.includes("plate")) {
-    if(placaSeleccionada !== ""){
+    if (placaSeleccionada !== "") {
       filtradas = filtradas.filter(
         (m) => (String(m.ID_USUARIO) || "") === String(placaSeleccionada)
       );
     }
-    console.log("estoy en placa");
-  }
-  else{
+
+  } else {
     if (placaSeleccionada !== "") {
       filtradas = filtradas.filter(
         (m) => (m.NRO_PLACA || "") === placaSeleccionada
@@ -387,7 +344,6 @@ function aplicarFiltros() {
 
   const bloques = container.querySelectorAll(".tabla-periodo");
   bloques.forEach((bloque) => {
-
     if (
       periodoSeleccionado === "" ||
       bloque.id === `tabla-${periodoSeleccionado.replace("-", "")}`
@@ -410,5 +366,3 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
-
