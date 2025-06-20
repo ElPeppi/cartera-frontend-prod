@@ -28,7 +28,15 @@ async function consultarMultasPorCedulaComparendos(userId) {
 
     const parsedBody = JSON.parse(result.body);
     comparendos = parsedBody.comparendos || [];
-
+    comparendos = comparendos.map((m) => {
+      // Elimina .0 al final de los campos ANNO y DOCUMENTO
+      return {
+        ...m,
+        ANNO: String(m.ANNO).replaceAll(".0", ""),
+        DOCUMENTO: String(m.DOCUMENTO).replaceAll(".0", ""),
+      };
+    });
+    console.log("Comparendos obtenidos:", comparendos);
     llenarSelectPeriodosComparendos();
     aplicarFiltrosComparendos();
   } catch (error) {
@@ -40,7 +48,10 @@ async function consultarMultasPorCedulaComparendos(userId) {
 function obtenerPeriodosDesdeMultas(multas) {
   const annos = new Set();
   multas.forEach((m) => {
-    if (m.ANNO) annos.add(m.ANNO);
+    if (m.ANNO) {
+      const limpio = String(m.ANNO).replaceAll(".0", ""); // elimina .0 al final
+      annos.add(limpio);
+    }
   });
   return Array.from(annos).sort();
 }
@@ -60,16 +71,20 @@ function llenarSelectPeriodosComparendos() {
 
 function aplicarFiltrosComparendos() {
   const periodo = containerComparendos.querySelector("#time").value;
-  let filtradas = comparendos;
 
-  if (periodo !== "") {
-    filtradas = comparendos.filter(
-      (m) => String(m.ANNO) === String(periodo)
-    );
+  if (periodo === "") {
+    // Si no hay año seleccionado, limpia la tabla y no muestra nada
+    mostrarTablaComparendos([]);
+    return;
   }
+
+  const filtradas = comparendos.filter(
+    (m) => String(m.ANNO) === String(periodo)
+  );
 
   mostrarTablaComparendos(filtradas);
 }
+
 
 function mostrarTablaComparendos(multas) {
   const contenedor = containerComparendos.querySelector(".table-responsive");
@@ -88,15 +103,28 @@ function mostrarTablaComparendos(multas) {
   multas.forEach((data) => {
     const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
     const fila = document.createElement("tr");
-    fila.innerHTML = `
+    if(data.RUTA_DOCUMENTO.toLowerCase().includes("imagenes")) {
+      fila.innerHTML = `
       <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
       <td>${data.NOMBRE_APELLIDO || nombre}</td>
       <td>${data.DESC_DOCUMENTO || ""}</td>
       <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
       <td>${data.FECHA || ""}</td>
       <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
-      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}/${data.GUIA}`)}" target="_blank">${data.GUIA}</a></td>
+      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
     `;
+    }
+    else{
+      fila.innerHTML = `
+      <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
+      <td>${data.NOMBRE_APELLIDO || nombre}</td>
+      <td>${data.DESC_DOCUMENTO || ""}</td>
+      <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
+      <td>${data.FECHA || ""}</td>
+      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs_cf/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
+      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
+    `;
+    }
     tbody.appendChild(fila);
   });
 }
