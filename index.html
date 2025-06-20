@@ -20,7 +20,8 @@
       referrerpolicy="no-referrer"
     />
     <link rel="stylesheet" href="./styles/style.css">
-    <script src="./js/peticion.js" defer></script>
+    <script src="./js/peticionDT.js" defer></script>
+    <script src="./js/peticionComparendo.js" defer></script>
     <script src="./js/slider.js"></script>
     <script src="./js/view.js"></script>
     
@@ -53,19 +54,25 @@
             >
           </li>
           <li>
-            <a href="#" onclick="showViews('comparing-view')"
+            <a href="#" onclick="showViews('wallet-id-view')"
               ><i class="fas fa-wallet"></i> <span>Cartera Y Pago Identificación</span></a
             >
           </li>
           <li>
-            <a href="#" onclick="showViews('search-plate-view')"
+            <a href="#" onclick="showViews('wallet-plate-view')"
               ><i class="fas fa-wallet"></i> <span>Cartera Y Pago Placa</span></a>
+          </li>
+                    <li>
+            <a href="#" onclick="showViews('comparing-view')">
+              <i class="fas fa-balance-scale"></i> <span>Comparendos</span>
+            </a>
           </li>
           <li>
             <a href="#" onclick="showViews('reports-view')"
               ><i class="fas fa-chart-bar"></i> <span>Informes</span></a
             >
           </li>
+
         </ul>
 
         <ul>
@@ -81,7 +88,7 @@
       <div id="content">
         <div class="container mt-5 view" id="transit-rights-id-view">
           <h1 class="text-center mb-4">Consulta de Documentos</h1>
-          <form id="queryForm" class="mb-4">
+          <form id="queryForm" class="mb-4 align-items-end gx-2">
             <div class="row align-items-end gx-2">
               <div class="col-md-4">
                 <input
@@ -195,35 +202,46 @@
             </table>
           </div>
         </div>
-        <div class="container view" id="wallet-id-view" style="display: none;">
-          <h1 class="text-center mb-4">Comparendos</h1>
-          <form id="queryForm" class="mb-4">
-            <div class="row">
-              <div class="col-md-6">
+        <div class="container mt-5 view" id="wallet-id-view" style="display: none;">
+          <h1 class="text-center mb-4">Cartera Y Pago</h1>
+          <form id="queryForm" class="mb-4 align-items-end gx-2">
+            <div class="row align-items-end gx-2">
+              <div class="col-md-4">
                 <input
                   type="text"
                   class="form-control"
-                  placeholder="Cedula usuario"
+                  placeholder="Cédula usuario"
                   id="param1"
                 />
               </div>
-              <div class="col-md-6">
-                <label for="placas">Seleciona la placa:</label>
-                <select name="placas" id="placas">
-                  <option value="">Todas las Placas</option>
-                </select>
-              </div>
-              <div class="col-md-6">
+              
+              <div class="col-md-4">
                 <button
                   type="button"
                   class="btn btn-primary w-100"
-                  onclick="consultarMultas()"
+                  onclick="consultarDT(this)"
                 >
                   Consultar
                 </button>
               </div>
+              <div class="col-md-4">
+                <label for="placas" class="form-label">Selecciona la placa:</label>
+                <select name="placas" id="placas" class="form-select">
+                  <option value="">Seleccione una placa</option>
+                </select>
+              </div>
+              
+              
             </div>
           </form>
+          <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
+            <div class="text-center table-header">
+              <h3 class="table-tittle">Documentos</h3>
+              <select name="time" class="form-select" id="time">
+                <option value="">Expediente [año1 - año2]</option>
+              </select>
+            </div>
+          </div>
           <div class="table-responsive">
             <table class="table table-striped" id="resultsTableComparendos">
               <thead>
@@ -249,35 +267,46 @@
             </table>
           </div>
         </div>
-        <div class="container view" id="wallet-plate-view" style="display: none;">
-          <h1 class="text-center mb-4">Buscar Placa</h1>
+        <div class="container mt-5 view" id="wallet-plate-view" style="display: none;">
+          <h1 class="text-center mb-4">Cartera Y Pago</h1>
           <form id="queryForm" class="mb-4">
-            <div class="row">
-              <div class="col-md-6">
+            <div class="row align-items-end gx-2">
+              <div class="col-md-4">
                 <input
                   type="text"
                   class="form-control"
-                  placeholder="Cedula usuario"
+                  placeholder="Placa usuario"
                   id="param1"
                 />
               </div>
-              <div class="col-md-6">
-                <label for="placas">Seleciona la placa:</label>
-                <select name="placas" id="placas">
-                  <option value="">Seleccione una placa</option>
-                </select>
-              </div>
-              <div class="col-md-6">
+              
+              <div class="col-md-4">
                 <button
                   type="button"
                   class="btn btn-primary w-100"
-                  onclick="consultarMultas()"
+                  onclick="consultarDT(this)"
                 >
                   Consultar
                 </button>
               </div>
+              <div class="col-md-4">
+                <label for="identifications" class="form-label">Selecciona la identificación:</label>
+                <select name="identifications" id="identifitacions" class="form-select">
+                  <option value="">Seleccione una identificación</option>
+                </select>
+              </div>
+              
+              
             </div>
           </form>
+          <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
+            <div class="text-center table-header">
+              <h3 class="table-tittle">Documentos</h3>
+              <select name="time" class="form-select" id="time">
+                <option value="">Expediente [año1 - año2]</option>
+              </select>
+            </div>
+          </div>
           <div class="table-responsive">
             <table class="table table-striped" id="resultsTablePlaca">
               <thead>
@@ -299,7 +328,57 @@
             </table>
           </div>
         </div>
-        <div class="container view" id="reports-view" style="display: none;">
+        <div class="container mt-5 view" id="comparing-view" style="display: none;">
+          <h1 class="text-center mb-4">Comparendos</h1>
+          <form id="queryForm" class="mb-4 align-items-end gx-2">
+            <div class="row align-items-end gx-2">
+              <div class="col-md-4">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Cédula usuario"
+                  id="param1"
+                />
+              </div>
+              
+              <div class="col-md-4">
+                <button
+                  type="button"
+                  class="btn btn-primary w-100"
+                  onclick="consultarDTComparendos(this)"
+                >
+                  Consultar
+                </button>
+              </div>
+            </div>
+          </form>
+          <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
+            <div class="text-center table-header">
+              <h3 class="table-tittle">Comparendos</h3>
+              <select name="time" class="form-select" id="time">
+                <option value="">año</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+              
+            <table class="table table-striped" id="resultsTable">
+              <thead>
+                <tr>
+                  <th>TIPO ACTO</th>
+                  <th>NOMBRE COMPLETO</th>
+                  <th>TIPO DOCUMENTO</th>
+                  <th>AÑO</th>
+                  <th>FECHA DOCUMENTO</th>
+                  <th>URL DOCUMENTO</th>
+                  <th>URL GUIA</th>
+                </tr>
+              </thead>
+              <tbody id="bodyTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="container mt-5 view" id="reports-view" style="display: none;">
           <h1 class="text-center mb-4">Informes</h1>
           <form id="queryForm" class="mb-4">
             <div class="row">
@@ -353,7 +432,7 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module">
+  <!--  <script type="module">
       import { userManager, signOutRedirect } from './js/auth.js';
   
       async function initAuth() {
@@ -391,6 +470,6 @@
           await userManager.signinRedirect();
         }
       });
-    </script>
+    </script>-->
   </body>
 </html>

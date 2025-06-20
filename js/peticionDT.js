@@ -73,10 +73,11 @@ async function consultarDT(htmlBoton) {
     const contenedorId = contenedor.id;
 
     if (contenedorId.includes("plate")) {
-      const plate = contenedor.querySelector("#param1").value;
+      const plate = contenedor.querySelector("#param1").value.replaceAll(".", "");
+      
       peticion("NRO_PLACA", plate, contenedor);
     } else {
-      const plate = contenedor.querySelector("#param1").value;
+      const plate = contenedor.querySelector("#param1").value.replaceAll(".", "");
       peticion("ID_USUARIO", plate, contenedor);
     }
   }
@@ -110,6 +111,7 @@ async function peticion(parametro, tipo, contenedor) {
     const result = await response.json();
     const primerItem = result[0];
     const segundoItem = result[1];
+    console.log("Segundo item:", segundoItem.body);
     const bodyDataMultas =
       typeof primerItem.body === "string"
         ? JSON.parse(primerItem.body)
@@ -297,7 +299,8 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     </thead>
     <tbody>
       ${documentosFiltrados.map((data) => {
-        const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
+       if(data.TIPO_ACTO.toUpperCase() !== "LLAMADA TELEFONICA"){
+         const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
         return `
           <tr>
             <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
@@ -306,8 +309,9 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
             <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
             <td>${data.FECHA || ""}</td>
             <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
-            <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}/${data.GUIA}`)}" target="_blank">${data.GUIA}</a></td>
+            <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
           </tr>`;
+       }
       }).join("")}
     </tbody>
   `;
