@@ -1,5 +1,5 @@
 // Asume que ya se cargó la respuesta y están en "todasLasMultas"
-let todasLasMultas = [];
+
 let todosLosDocumentos = [];
 //quiero obtener la lista de contenerdores con clase continner
 const contenedores = document.querySelectorAll(".container");
@@ -24,21 +24,14 @@ async function consultarMultasCedula() {
     );
 
     const result = await response.json();
-    const primerItem = result[0];
-    const segundoItem = result[1];
-    const bodyDataMultas =
-      typeof primerItem.body === "string"
-        ? JSON.parse(primerItem.body)
-        : primerItem.body;
+    const segundoItem = result;
     const bodyDataDocumentos =
       typeof segundoItem.body === "string"
         ? JSON.parse(segundoItem.body)
         : segundoItem.body;
 
-    const multas = bodyDataMultas.cartera || [];
     const documentos = bodyDataDocumentos.documentos || [];
 
-    todasLasMultas = multas;
     todosLosDocumentos = documentos;
 
     // Llenar selector de placas
@@ -49,7 +42,7 @@ async function consultarMultasCedula() {
     placaSelect.appendChild(optionDefault);
 
     const placasUnicas = [
-      ...new Set(multas.map((m) => m.NRO_PLACA).filter(Boolean)),
+      ...new Set(documentos.map((m) => m.NRO_PLACA).filter(Boolean)),
     ];
     placasUnicas.forEach((placa) => {
       const option = document.createElement("option");
@@ -82,7 +75,6 @@ async function consultarDT(htmlBoton) {
     }
   }
 
-  const placa = document.getElementById("param1").value;
 }
 async function peticion(parametro, tipo, contenedor) {
   try {
@@ -109,22 +101,15 @@ async function peticion(parametro, tipo, contenedor) {
     }
 
     const result = await response.json();
-    const primerItem = result[0];
-    const segundoItem = result[1];
+    const segundoItem = result;
     console.log("Segundo item:", segundoItem.body);
-    const bodyDataMultas =
-      typeof primerItem.body === "string"
-        ? JSON.parse(primerItem.body)
-        : primerItem.body;
     const bodyDataDocumentos =
       typeof segundoItem.body === "string"
         ? JSON.parse(segundoItem.body)
         : segundoItem.body;
 
-    const multas = bodyDataMultas.cartera || [];
     const documentos = bodyDataDocumentos.documentos || [];
 
-    todasLasMultas = multas;
     todosLosDocumentos = documentos;
     if (parametro === "NRO_PLACA") {
       placaSelect = contenedor.querySelector("#identifitacions");
@@ -137,13 +122,14 @@ async function peticion(parametro, tipo, contenedor) {
     placaSelect.innerHTML = "";
     const optionDefault = document.createElement("option");
     optionDefault.value = "";
-    optionDefault.textContent = "Todas las Placas";
+    optionDefault.textContent = parametro === "ID_USUARIO"
+      ? "Todas las Placas": "Todas las Cédulas";
     placaSelect.appendChild(optionDefault);
 
     let placasUnicas;
     if (parametro === "NRO_PLACA") {
       placasUnicas = [
-        ...new Set(multas.map((m) => m.ID_USUARIO).filter(Boolean)),
+        ...new Set(documentos.map((m) => m.ID_USUARIO).filter(Boolean)),
       ];
     } else {
       placasUnicas = [
@@ -328,7 +314,7 @@ function aplicarFiltros() {
   const placaSeleccionada = placaSelect.value;
   const periodoSeleccionado = periodoSelect.value;
 
-  let filtradas = [...todasLasMultas];
+  let filtradas = [...todosLosDocumentos];
   if (containerID.includes("plate")) {
     if (placaSeleccionada !== "") {
       filtradas = filtradas.filter(
