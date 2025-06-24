@@ -100,33 +100,39 @@ function mostrarTablaComparendos(multas) {
     return;
   }
 
-  multas.forEach((data) => {
+  // Primero ordenamos el array por TIPO_ACTO alfabéticamente
+  const multasOrdenadas = [...multas].sort((a, b) => {
+    const tipoA = (a.TIPO_ACTO || "").toUpperCase();
+    const tipoB = (b.TIPO_ACTO || "").toUpperCase();
+    return tipoA.localeCompare(tipoB);
+  });
+
+  // Luego iteramos sobre el array ordenado
+  multasOrdenadas.forEach((data) => {
     const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
     const fila = document.createElement("tr");
-    if(data.RUTA_DOCUMENTO.toLowerCase().includes("imagenes")) {
-      fila.innerHTML = `
-      <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
-      <td>${data.NOMBRE_APELLIDO || nombre}</td>
-      <td>${data.DESC_DOCUMENTO || ""}</td>
-      <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
-      <td>${data.FECHA || ""}</td>
-      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
-      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
-    `;
-    }
-    else{
-      fila.innerHTML = `
-      <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
-      <td>${data.NOMBRE_APELLIDO || nombre}</td>
-      <td>${data.DESC_DOCUMENTO || ""}</td>
-      <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
-      <td>${data.FECHA || ""}</td>
-      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs_cf/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
-      <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
-    `;
-    }
+
+    const rutaDocumento = data.RUTA_DOCUMENTO.toLowerCase();
+    const isImagen = rutaDocumento.includes("imagenes");
+
+    const rutaBase = isImagen
+      ? "https://litis.s3.us-east-1.amazonaws.com/pdfs"
+      : "https://litis.s3.us-east-1.amazonaws.com/pdfs_cf";
+
+    fila.innerHTML = `
+    <td>${(data.TIPO_ACTO || "").toUpperCase()}</td>
+    <td>${(data.DOCFUE || "").toUpperCase()}</td>
+    <td>${data.NOMBRE_APELLIDO || nombre}</td>
+    <td>${data.DESC_DOCUMENTO || ""}</td>
+    <td>${data.ANNO?.replaceAll?.(".0", "") || ""}</td>
+    <td>${data.FECHA || ""}</td>
+    <td><a href="${sanearURL(`${rutaBase}/${data.RUTA_DOCUMENTO}/${data.DOCUMENTO}`)}" target="_blank">${data.DOCUMENTO}</a></td>
+    <td><a href="${sanearURL(`https://litis.s3.us-east-1.amazonaws.com/pdfs/${data.RUTA_GUIA}`)}" target="_blank">${data.GUIA}</a></td>
+  `;
+
     tbody.appendChild(fila);
   });
+
 }
 
 function sanearURL(url) {
