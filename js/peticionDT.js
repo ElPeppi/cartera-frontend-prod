@@ -346,6 +346,10 @@ function aplicarFiltros() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const vistaActiva = document.querySelector(".view:not([style*='display: none'])");
+  console.log("Vista activa:", vistaActiva ? vistaActiva.id : "Ninguna");
+  if (!vistaActiva || vistaActiva.id !== "transit-rights-id-view") return;
+
   document.addEventListener("change", (e) => {
     if (e.target && e.target.matches("#placas, #identifitacions")) {
       aplicarFiltros();
