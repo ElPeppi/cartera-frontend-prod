@@ -1,7 +1,6 @@
 let containerComparendos = null;
 let comparendos = [];
 
-const placaSelectComparendos = null;
 let periodoSelectComparendos = null;
 
 async function consultarDTComparendos(htmlBoton) {

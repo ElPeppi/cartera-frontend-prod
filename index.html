@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="./styles/style.css">
     <script src="./js/peticionDT.js" defer></script>
     <script src="./js/peticionComparendo.js" defer></script>
+    <script src="./js/peticionCartera.js" defer></script>
     <script src="./js/slider.js"></script>
     <script src="./js/view.js"></script>
     
@@ -219,7 +220,7 @@
                 <button
                   type="button"
                   class="btn btn-primary w-100"
-                  onclick="consultarDT(this)"
+                  onclick="consultarCartera(this)"
                 >
                   Consultar
                 </button>
@@ -243,7 +244,7 @@
             </div>
           </div>
           <div class="table-responsive">
-            <table class="table table-striped" id="resultsTableComparendos">
+            <table class="table table-striped" id="tablaCartera">
               <thead>
                 <tr>
                   <th>NRO_PLACA</th>
@@ -264,6 +265,26 @@
                 </tr>
               </thead>
               <tbody id="bodyTableComparendos"></tbody>
+            </table>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped" id="tablePago">
+              <thead>
+                <tr>
+                  <th>NRO_PLACA</th>
+                  <th>DESC_DOCUMENTO</th>
+                  <th>ID_USUARIO</th>
+                  <th>NOMBRES</th>
+                  <th>APELLIDOS</th>
+                  <th>DIRECCION</th>
+                  <th>NOMBRE_CLIENTE</th>
+                  <th>NOMBRE_DE</th>
+                  <th>EMAIL</th>
+                  <th>CELULAR</th>
+                  <th>TELEFONO</th>
+                </tr>
+              </thead>
+              <tbody id="bodyTableCartera"></tbody>
             </table>
           </div>
         </div>
