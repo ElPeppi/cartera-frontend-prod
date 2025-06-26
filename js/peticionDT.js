@@ -9,55 +9,9 @@ let placaSelect = document.getElementById("placas");
 let periodoSelect = document.getElementById("time");
 
 let container;
-// Consulta de multas por cédula
-async function consultarMultasCedula() {
-  const user_id = document.getElementById("param1").value;
 
-  try {
-    const response = await fetch(
-      "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ID_USUARIO: user_id }),
-      }
-    );
+let parametroSeleccionado = "";
 
-    const result = await response.json();
-    const segundoItem = result;
-    const bodyDataDocumentos =
-      typeof segundoItem.body === "string"
-        ? JSON.parse(segundoItem.body)
-        : segundoItem.body;
-
-    const documentos = bodyDataDocumentos.documentos || [];
-
-    todosLosDocumentos = documentos;
-
-    // Llenar selector de placas
-    placaSelect.innerHTML = "";
-    const optionDefault = document.createElement("option");
-    optionDefault.value = "";
-    optionDefault.textContent = "Todas las Placas";
-    placaSelect.appendChild(optionDefault);
-
-    const placasUnicas = [
-      ...new Set(documentos.map((m) => m.NRO_PLACA).filter(Boolean)),
-    ];
-    placasUnicas.forEach((placa) => {
-      const option = document.createElement("option");
-      option.value = placa;
-      option.textContent = placa;
-      placaSelect.appendChild(option);
-    });
-
-    document.querySelector(".plate").style.display = "block";
-    llenarSelectPeriodos(); // Llenar sin placa seleccionada
-    aplicarFiltros();
-  } catch (error) {
-    console.error("Error al consultar multas:", error);
-  }
-}
 async function consultarDT(htmlBoton) {
   //saber en que contenedor se hizo la consulta
   const contenedor = htmlBoton.closest(".view");
@@ -99,10 +53,10 @@ async function peticion(parametro, tipo, contenedor) {
         }
       );
     }
-
+    parametroSeleccionado = parametro;
+    console.log("Parámetro seleccionado:", parametroSeleccionado);
     const result = await response.json();
     const segundoItem = result;
-    console.log("Segundo item:", segundoItem.body);
     const bodyDataDocumentos =
       typeof segundoItem.body === "string"
         ? JSON.parse(segundoItem.body)
@@ -136,6 +90,7 @@ async function peticion(parametro, tipo, contenedor) {
         ...new Set(documentos.map((m) => m.NRO_PLACA).filter(Boolean)),
       ];
     }
+    console.log("Placas únicas:", placasUnicas);
     placasUnicas.forEach((placa) => {
       const option = document.createElement("option");
       option.value = placa;
@@ -153,22 +108,32 @@ async function peticion(parametro, tipo, contenedor) {
 function obtenerPeriodosDesdeDocumentos(documentos, placas = []) {
   let annos = new Set();
 
-  documentos.forEach((doc) => {
+  if (parametroSeleccionado === "ID_USUARIO") {
+    documentos.forEach((doc) => {
     if (!doc.ANNO) return;
     if (placas.length > 0 && !placas.includes(doc.NRO_PLACA)) return;
     annos.add(doc.ANNO);
   });
-
+  }else{
+    documentos.forEach((doc) => {
+      if (!doc.ANNO) return;
+      if (placas.length > 0 && !placas.includes(doc.ID_USUARIO)) return;
+      annos.add(doc.ANNO);
+    });
+  }
+  console.log("Años encontrados:", annos);
   return Array.from(annos).sort();
 }
 
 function llenarSelectPeriodos(placaSeleccionada = "") {
   const containerID = container.id;
+  console.log("Llenando select periodos para el contenedor:", containerID);
   let placasAsociadas = [];
 
-  if (containerID.includes("plate")) {
+    console.log("Contenedor de placas");
     if (placaSeleccionada) {
-      placasAsociadas = [
+      if (parametroSeleccionado === "ID_USUARIO"){
+        placasAsociadas = [
         ...new Set(
           todosLosDocumentos
             .filter((m) => String(m.ID_USUARIO) === String(placaSeleccionada))
@@ -176,10 +141,19 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
             .filter(Boolean)
         ),
       ];
+      console.log("Placas asociadas a la cédulaaaaaaaaaaaaaa:", placasAsociadas);
+      }
+      else {
+        placasAsociadas = [
+          ...new Set(
+            todosLosDocumentos
+              .filter((m) => String(m.NRO_PLACA) === String(placaSeleccionada))
+              .map((m) => m.ID_USUARIO)
+              .filter(Boolean)
+          ),
+        ];
+      }
     }
-  } else {
-    placasAsociadas = [placaSeleccionada];
-  }
 
   const periodos = obtenerPeriodosDesdeDocumentos(
     todosLosDocumentos,
@@ -325,7 +299,7 @@ function aplicarFiltros() {
   } else {
     if (placaSeleccionada !== "") {
       filtradas = filtradas.filter(
-        (m) => (m.NRO_PLACA || "") === placaSeleccionada
+        (m) => (m.NRO_PLACA || "") === String(placaSeleccionada)
       );
     }
   }
@@ -348,11 +322,11 @@ function aplicarFiltros() {
 window.addEventListener("DOMContentLoaded", () => {
   const vistaActiva = document.querySelector(".view:not([style*='display: none'])");
   console.log("Vista activa:", vistaActiva ? vistaActiva.id : "Ninguna");
-  if (!vistaActiva || vistaActiva.id !== "transit-rights-id-view") return;
 
   document.addEventListener("change", (e) => {
     if (e.target && e.target.matches("#placas, #identifitacions")) {
       aplicarFiltros();
+      console.log("Placa seleccionada:", e.target.value);
       llenarSelectPeriodos(e.target.value);
     }
     if (e.target && e.target.matches("#time")) {
