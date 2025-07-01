@@ -63,8 +63,21 @@ async function peticion(parametro, tipo, contenedor) {
         : segundoItem.body;
 
     const documentos = bodyDataDocumentos.documentos || [];
+    //quiero que hace algo para que en documentos los años y los id si tienen un .0 se remplace por un espacio vacio
+    documentos.forEach((doc) => {
+      if (doc.ANNO) {
+        doc.ANNO = doc.ANNO.replaceAll(".0", "");
+      }
+      if (doc.ID_USUARIO) {
+        doc.ID_USUARIO = doc.ID_USUARIO.replaceAll(".0", "");
+      }
+      if (doc.NRO_PLACA) {
+        doc.NRO_PLACA = doc.NRO_PLACA.replaceAll(".0", "");
+      }
+    });
 
     todosLosDocumentos = documentos;
+    console.log("Documentos obtenidos:", todosLosDocumentos);
     if (parametro === "NRO_PLACA") {
       placaSelect = contenedor.querySelector("#identifitacions");
       periodoSelect = contenedor.querySelector("#time");
@@ -136,7 +149,7 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
         placasAsociadas = [
         ...new Set(
           todosLosDocumentos
-            .filter((m) => String(m.ID_USUARIO) === String(placaSeleccionada))
+            .filter((m) => String(m.ID_USUARIO) == String(placaSeleccionada))
             .map((m) => m.NRO_PLACA)
             .filter(Boolean)
         ),
@@ -144,17 +157,18 @@ function llenarSelectPeriodos(placaSeleccionada = "") {
       console.log("Placas asociadas a la cédulaaaaaaaaaaaaaa:", placasAsociadas);
       }
       else {
+        console.log("Contenedor de placas");
         placasAsociadas = [
           ...new Set(
             todosLosDocumentos
-              .filter((m) => String(m.NRO_PLACA) === String(placaSeleccionada))
+              .filter((m) => String(m.NRO_PLACA) == String(placaSeleccionada))
               .map((m) => m.ID_USUARIO)
               .filter(Boolean)
           ),
         ];
       }
     }
-
+  console.log("Placas asociadassssssssssssssssssssssssssssssssss:", placasAsociadas);
   const periodos = obtenerPeriodosDesdeDocumentos(
     todosLosDocumentos,
     placasAsociadas

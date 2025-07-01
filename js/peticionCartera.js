@@ -7,11 +7,118 @@ let placaSelectCartera = document.getElementById("placaSelectCartera");
 let periodoSelectCartera = null;
 
 async function consultarCartera(htmlBoton) {
-    const contenedor = htmlBoton.closest(".view");
-    containerCartera = contenedor;
+  const contenedor = htmlBoton.closest(".view");
+  containerCartera = contenedor;
 
-    const cedula = contenedor.querySelector("#param1").value.replaceAll(".", "");
-    await consultarCarteraPago(cedula);
+  const valor = contenedor.querySelector("#param1").value.replaceAll(".", "");
+
+  if (contenedor.id.includes("plate")) {
+    await consultarCarteraPorCampo("NRO_PLACA", valor);
+  } else {
+    await consultarCarteraPorCampo("ID_USUARIO", valor);
+  }
+}
+async function consultarCarteraPorCampo(parametro, valor) {
+  try {
+    const body = {};
+    body[parametro] = valor;
+
+    const response = await fetch(
+      "https://oee14dgk0m.execute-api.us-east-1.amazonaws.com/production/pagos",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const result = await response.json();
+    const primerItem = result[0];
+    const segundoItem = result[1];
+
+    const bodyDataCartera =
+      typeof primerItem.body === "string"
+        ? JSON.parse(primerItem.body)
+        : primerItem.body;
+
+    const bodyDataPagos =
+      typeof segundoItem.body === "string"
+        ? JSON.parse(segundoItem.body)
+        : segundoItem.body;
+
+    cartera = (bodyDataCartera.cartera || []).map((m) => ({
+      ...m,
+      ANNO: String(m.ANNO).replaceAll(".0", ""),
+      DOCUMENTO: String(m.DOCUMENTO).replaceAll(".0", ""),
+    }));
+
+    pagos = (bodyDataPagos.pagos || []).map((p) => ({
+      ...p,
+      ANNO: String(p.VIGENCIA).replaceAll(".0", ""),
+      DOCUMENTO: String(p.DOCUMENTO).replaceAll(".0", ""),
+    }));
+
+    // Llenar filtro cruzado (placa si buscaste por ID, o ID si buscaste por placa)
+    const valoresUnicos = new Set();
+    if (parametro === "ID_USUARIO") {
+      cartera.forEach((item) => item.NRO_PLACA && valoresUnicos.add(item.NRO_PLACA));
+      pagos.forEach((item) => item.PLACA && valoresUnicos.add(item.PLACA));
+      actualizarSelect("#placaSelectCartera", "Seleccione una placa", valoresUnicos);
+    } else {
+      cartera.forEach((item) => item.ID_USUARIO && valoresUnicos.add(item.ID_USUARIO));
+      pagos.forEach((item) => item.ID_USUARIO && valoresUnicos.add(item.ID_USUARIO));
+      actualizarSelect("#placaSelectCartera", "Seleccione una cédula", valoresUnicos);
+    }
+
+    aplicarFiltrosCartera();
+
+  } catch (error) {
+    console.error("Error al consultar cartera:", error);
+  }
+}
+
+function actualizarSelect(selectorId, placeholder, valoresSet) {
+  const select = containerCartera.querySelector(selectorId);
+  select.innerHTML = "";
+
+  const optionDefault = document.createElement("option");
+  optionDefault.value = "";
+  optionDefault.textContent = placeholder;
+  select.appendChild(optionDefault);
+
+  [...valoresSet].sort().forEach((valor) => {
+    const option = document.createElement("option");
+    option.value = valor;
+    option.textContent = valor;
+    select.appendChild(option);
+  });
+}
+
+
+function aplicarFiltrosCartera() {
+  const valor = containerCartera.querySelector("#placaSelectCartera").value.trim();
+  if (!valor) {
+    mostrarTablaCartera([]);
+    mostrarTablaPagos([]);
+    return;
+  }
+
+  // Normaliza los campos a texto para comparación segura
+  const filtradas = cartera.filter(
+    (item) =>
+      String(item.NRO_PLACA).trim() === valor ||
+      String(item.ID_USUARIO).trim() === valor
+  );
+
+  const filtradosPagos = pagos.filter(
+    (item) =>
+      String(item.PLACA).trim() === valor ||
+      String(item.ID_USUARIO).trim() === valor
+  );
+
+
+  mostrarTablaCartera(filtradas);
+  mostrarTablaPagos(filtradosPagos);
 }
 
 async function consultarCarteraPago(userId) {
@@ -42,7 +149,6 @@ async function consultarCarteraPago(userId) {
         
         const placasUnicas = new Set();
 
-        console.log("Resultado de la consulta:",  bodyDataPagos);
         cartera = bodyDataCartera.cartera || [];
         pagos = bodyDataPagos.pagos || [];
 
@@ -63,7 +169,6 @@ async function consultarCarteraPago(userId) {
         placaSelectCartera.innerHTML = ""; // Limpia las opciones previas
         placaSelectCartera.appendChild(optionDefault);
 
-        console.log("Placas únicas obtenidas:", placasUnicas);
         Array.from(placasUnicas).sort().forEach((placa) => {
             const option = document.createElement("option");
             option.value = placa;
@@ -104,7 +209,6 @@ function obtenerPeriodosDesdeCartera(cartera) {
             annos.add(limpio);
         }
     });
-    console.log("Años obtenidos desde cartera:", annos);
     return Array.from(annos).sort();
 }
 
@@ -121,27 +225,7 @@ function llenarSelectPeriodosCartera() {
     });
 }
 
-function aplicarFiltrosCartera() {
-    const placa = containerCartera.querySelector("#placaSelectCartera").value;
-    console.log("Placa seleccionada:", placa);
-    if (placa === "") {
-        // Si no hay año seleccionado, limpia la tabla y no muestra nada
-        mostrarTablaCartera([]);
-        mostrarTablaPagos([]);
-        return;
-    }
 
-    const filtradas = cartera.filter(
-        (m) => String(m.NRO_PLACA) === String(placa)
-    );
-
-    mostrarTablaCartera(filtradas);
-    const filtradosPagos = pagos.filter(
-        (p) => String(p.PLACA) === String(placa)
-    );
-    mostrarTablaPagos(filtradosPagos);
-
-}
 
 function mostrarTablaCartera(cartera) {
     const contenedor = containerCartera.querySelector(".table-responsive1");

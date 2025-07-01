@@ -299,14 +299,14 @@
                 <button
                   type="button"
                   class="btn btn-primary w-100"
-                  onclick="consultarDT(this)"
+                  onclick="consultarCartera(this)"
                 >
                   Consultar
                 </button>
               </div>
               <div class="col-md-4">
                 <label for="identifications" class="form-label">Selecciona la identificación:</label>
-                <select name="identifications" id="identifitacions" class="form-select">
+                <select name="placas" id="placaSelectCartera" class="form-select">
                   <option value="">Seleccione una identificación</option>
                 </select>
               </div>
@@ -314,6 +314,7 @@
               
             </div>
           </form>
+          <!--
           <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
             <div class="text-center table-header">
               <h3 class="table-tittle">Documentos</h3>
@@ -322,26 +323,44 @@
               </select>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="table table-striped" id="resultsTablePlaca">
+        -->
+          <div class="table-responsive table-responsive1">
+            <table class="table table-striped" id="tablaCartera">
               <thead>
                 <tr>
                   <th>NRO_PLACA</th>
-                  <th>DESC_DOCUMENTO</th>
-                  <th>ID_USUARIO</th>
-                  <th>NOMBRES</th>
-                  <th>APELLIDOS</th>
-                  <th>DIRECCION</th>
-                  <th>NOMBRE_CLIENTE</th>
-                  <th>NOMBRE_DE</th>
-                  <th>EMAIL</th>
-                  <th>CELULAR</th>
-                  <th>TELEFONO</th>
+                  <th>ESTADO PLACA</th>
+                  <th>TIPO DOCUMENTO</th>
+                  <th>DOCUEMNTO</th>
+                  <th>NOMBRE</th>
+                  <th>AÑO</th>
+                  <th>ESTADO VIGENCIA</th>
+                  <th>DERECHOS</th>
+                  <th>INTERESES</th>
+                  <th>COSTAS</th>
                 </tr>
               </thead>
-              <tbody id="bodyTablePlaca"></tbody>
+              <tbody id="bodyTableComparendos"></tbody>
             </table>
           </div>
+          <div class="table-responsive table-responsive2">
+            <table class="table table-striped" id="tablePago">
+              <thead>
+                <tr>
+                  <th>NRO RECIBO</th>
+                  <th>ID PAGO</th>
+                  <th>PLACA</th>
+                  <th>FECHA LIQUIDACION</th>
+                  <th>VIGENCIA</th>
+                  <th>VALOR</th>
+                  <th>ID TARIFA</th>
+                  <th>CONCEPTO</th>
+                </tr>
+              </thead>
+              <tbody id="bodyTableCartera"></tbody>
+            </table>
+          </div>
+        </div>
         </div>
         <div class="container mt-5 view" id="comparing-view" style="display: none;">
           <h1 class="text-center mb-4">Comparendos</h1>
