@@ -17,6 +17,7 @@
   <script src="./js/slider.js"></script>
   <script src="./js/view.js"></script>
 
+
 </head>
 
 <body>
@@ -55,6 +56,11 @@
         <li>
           <a href="#" onclick="showViews('comparing-view')">
             <i class="fas fa-balance-scale"></i> <span>Comparendos</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" onclick="showViews('doc-generate-view')" id="doc-generate-link">
+            <i class="fas fa-file-alt"></i> <span>Generación de Documentos</span>
           </a>
         </li>
         <li>
@@ -395,13 +401,49 @@
           </table>
         </div>
       </div>
+      <div class="container mt-5 view" id="doc-generate-view" style="display: none;">
+
+      </div>
     </div>
 
 
   </div>
   </div>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/jwt-decode.min.js"></script>
+  <script>
+  // Encuentra la clave del id_token en sessionStorage
+  const storageKeys = Object.keys(sessionStorage);
+  const oidcKey = storageKeys.find(k => k.startsWith("oidc.user:"));
+  let idToken = null;
+
+  if (oidcKey) {
+    const userData = JSON.parse(sessionStorage.getItem(oidcKey));
+    idToken = userData.id_token;
+  }
+
+  // Lista de correos permitidos (puedes usar username también)
+  const allowedEmails = [
+    "jeffry0414@gmail.com",
+    "admin@example.com"
+  ];
+
+  if (idToken) {
+    const decoded = jwt_decode(idToken);
+    const email = decoded.email;
+
+    // Si no está autorizado, ocultamos el div
+    if (!allowedEmails.includes(email)) {
+      const div = document.getElementById("doc-generate-link");
+      if (div) div.style.display = "none";
+    }
+  } else {
+    // No autenticado
+    const div = document.getElementById("doc-generate-link");
+    if (div) div.style.display = "none";
+  }
+</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!--<script type="module">
+ <!-- <script type="module">
       import { userManager, signOutRedirect } from './js/auth.js';
   
       async function initAuth() {
