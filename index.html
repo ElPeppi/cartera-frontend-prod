@@ -14,6 +14,7 @@
   <script src="./js/peticionDT.js" defer></script>
   <script src="./js/peticionComparendo.js" defer></script>
   <script src="./js/peticionCartera.js" defer></script>
+  <script src="./js/peticionCarteraComparendo.js" defer></script>
   <script src="./js/slider.js"></script>
   <script src="./js/view.js"></script>
 
@@ -52,6 +53,10 @@
         <li>
           <a href="#" onclick="showViews('wallet-plate-view')"><i class="fas fa-wallet"></i> <span>Cartera Y Pago
               Placa</span></a>
+        </li>
+        <li>
+          <a href="#" onclick="showViews('wallet-comparing-view')"><i class="fas fa-balance-scale"></i> <span>Cartera Y Pago Comparendos
+          </span></a>
         </li>
         <li>
           <a href="#" onclick="showViews('comparing-view')">
@@ -403,6 +408,66 @@
       </div>
       <div class="container mt-5 view" id="doc-generate-view" style="display: none;">
 
+      </div>
+      <div class="container mt-5 view" id="wallet-comparing-view" style="display: none;">
+        <h1 class="text-center mb-4">Cartera Y Pago</h1>
+        <form id="queryForm" class="mb-4 align-items-end gx-2">
+          <div class="row align-items-end gx-2">
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Cédula usuario" id="param1" />
+            </div>
+
+            <div class="col-md-4">
+              <button type="button" class="btn btn-primary w-100" onclick="consultarDTPagosComparendos(this)">
+                Consultar
+              </button>
+            </div>
+          </div>
+        </form>
+          <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
+            <div class="text-center table-header">
+              <h3 class="table-tittle">Documentos</h3>
+              <select name="time" class="form-select" id="time">
+                <option value="">Expediente [año1 - año2]</option>
+              </select>
+            </div>
+          </div>
+        <div class="table-responsive table-responsive1">
+          <table class="table table-striped" id="tablaCartera">
+            <thead>
+              <tr>
+                <th>DESC_ESTADO</th>
+                <th>ID USUARIO</th>
+                <th>NOMBRE COMPLETO</th>
+                <th>DIRECIÓN</th>
+                <th>CIUDAD</th>
+                <th>EMAIL</th>
+                <th>ID REGISTRO</th>
+                <th>TIPO DOCUMENTO</th>
+                <th>NRO COMPARENDO MOROSO</th>
+                <th>AÑO</th>
+              </tr>
+            </thead>
+            <tbody id="bodyTableComparendos"></tbody>
+          </table>
+        </div>
+        <div class="table-responsive table-responsive2">
+          <table class="table table-striped" id="tablePago">
+            <thead>
+              <tr>
+                <th>DESC TRAMITE</th>
+                <th>DESC DOCUMENTO</th>
+                <th>ID USUARIO</th>
+                <th>NOMBRE</th>
+                <th>ID PAGA FACTURA</th>
+                <th>ID REGISTRO</th>
+                <th>NRO RECIBO</th>
+                <th>VALOR TARIFA</th>
+              </tr>
+            </thead>
+            <tbody id="bodyTableCartera"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
