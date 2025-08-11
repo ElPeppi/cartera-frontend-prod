@@ -41,8 +41,8 @@ async function consultarPorCedulaComparendos(userId) {
     });
     console.log("Comparendos obtenidos:", comparendosPago);
     console.log("Pagos obtenidos:", pagosComparendos);
-    llenarSelectPeriodosComparendos();
-    aplicarFiltrosComparendos();
+    llenarSelectPeriodosCarteraComparendos();
+    aplicarFiltrosCarteraComparendos();
   } catch (error) {
     console.error("Error al consultar comparendos:", error);
   }
@@ -60,7 +60,7 @@ function obtenerPeriodosDesdeMultas(multas) {
   return Array.from(annos).sort();
 }
 
-function llenarSelectPeriodosComparendos() {
+function llenarSelectPeriodosCarteraComparendos() {
   const select = containerCarteraComparendos.querySelector("#time");
   select.innerHTML = `<option value="">año</option>`;
 
@@ -73,12 +73,12 @@ function llenarSelectPeriodosComparendos() {
   });
 }
 
-function aplicarFiltrosComparendos() {
+function aplicarFiltrosCarteraComparendos() {
   const periodo = containerCarteraComparendos.querySelector("#time").value;
 
   if (periodo === "") {
     // Si no hay año seleccionado, limpia la tabla y no muestra nada
-    mostrarTablaComparendos( []);
+    mostrarTablaCarteraComparendos( []);
     return;
   }
 
@@ -86,11 +86,11 @@ function aplicarFiltrosComparendos() {
     (m) => String(m.ANNO) === String(periodo)
   );
 
-  mostrarTablaComparendos(filtradas);
+  mostrarTablaCarteraComparendos(filtradas);
 }
 
 
-function mostrarTablaComparendos(multas) {
+function mostrarTablaCarteraComparendos(multas) {
   const contenedor = containerCarteraComparendos.querySelector(".table-responsive1");
   
   const tabla = contenedor.querySelector("table");
@@ -171,7 +171,7 @@ function sanearURL(url) {
 window.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("change", (e) => {
     if (e.target && e.target.matches("#time")) {
-      aplicarFiltrosComparendos();
+      aplicarFiltrosCarteraComparendos();
     }
   });
 });

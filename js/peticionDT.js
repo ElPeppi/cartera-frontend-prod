@@ -273,6 +273,7 @@ function mostrarTablasPorPeriodo(multas, documentos = []) {
     </thead>
     <tbody>
       ${documentosFiltrados.map((data) => {
+        console.log("Datos del documento:", data);
        if(data.TIPO_ACTO.toUpperCase() !== "LLAMADA TELEFONICA"){
          const nombre = `${data.NOMBRES || ""} ${data.APELLIDOS || ""}`;
         return `
