@@ -15,6 +15,7 @@
   <script src="./js/peticionComparendo.js" defer></script>
   <script src="./js/peticionCartera.js" defer></script>
   <script src="./js/peticionCarteraComparendo.js" defer></script>
+  <script src="./js/peticionDocGen.js" defer></script>
   <script src="./js/slider.js"></script>
   <script src="./js/view.js"></script>
 
@@ -55,8 +56,9 @@
               Placa</span></a>
         </li>
         <li>
-          <a href="#" onclick="showViews('wallet-comparing-view')"><i class="fas fa-balance-scale"></i> <span>Cartera Y Pago Comparendos
-          </span></a>
+          <a href="#" onclick="showViews('wallet-comparing-view')"><i class="fas fa-balance-scale"></i> <span>Cartera Y
+              Pago Comparendos
+            </span></a>
         </li>
         <li>
           <a href="#" onclick="showViews('comparing-view')">
@@ -110,14 +112,14 @@
         </form>
         <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
           <div class="text-center table-header">
-            <h3 class="table-tittle">Documentos</h3>
+
             <select name="time" class="form-select" id="time">
               <option value="">Expediente [año1 - año2]</option>
             </select>
           </div>
         </div>
         <div class="table-responsive">
-
+          <h3 class="table-tittle">Documentos</h3>
           <table class="table table-striped" id="resultsTable">
             <thead>
               <tr>
@@ -131,6 +133,22 @@
               </tr>
             </thead>
             <tbody id="bodyTable"></tbody>
+          </table>
+        </div>
+        <div class="table-responsive">
+          <h3>Mensajes enviados</h3>
+          <table class="table table-striped" id="resultsTableMensajes">
+            <thead>
+              <tr>
+                <th>TIPO MENSAJE</th>
+                <th>MENSAJE</th>
+                <th>CEDULA</th>
+                <th>NOMBRE COMPLETO</th>
+                <th>CELULAR</th>
+                <th>FECHA DE ENVIO</th>
+              </tr>
+            </thead>
+            <tbody id="bodyTableMensajes"></tbody>
           </table>
         </div>
       </div>
@@ -407,7 +425,28 @@
         </div>
       </div>
       <div class="container mt-5 view" id="doc-generate-view" style="display: none;">
+        <h1 class="text-center mb-4">Generación de Documentos</h1>
+        <form id="queryForm" class="mb-4 align-items-end gx-2">
+          <div class="row align-items-end gx-2">
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Cédula usuario" id="param1" />
+            </div>
+            <div class="col-md-4">
+              <label for="doc_gen" class="form-label">Selecciona una plantilla:</label>
+              <select name="doc_gen" id="doc_gen" class="form-select">
+                <option value="">Seleccione una plantilla</option>
+                <option value="1">Resolución</option>
+                <option value="2">Respuesta con desembargo</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button type="button" class="btn btn-primary w-100" onclick="docGen(this)">
+                Consultar
+              </button>
+            </div>
 
+          </div>
+        </form>
       </div>
       <div class="container mt-5 view" id="wallet-comparing-view" style="display: none;">
         <h1 class="text-center mb-4">Cartera Y Pago</h1>
@@ -424,14 +463,14 @@
             </div>
           </div>
         </form>
-          <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
-            <div class="text-center table-header">
-              <h3 class="table-tittle">Documentos</h3>
-              <select name="time" class="form-select" id="time">
-                <option value="">Expediente [año1 - año2]</option>
-              </select>
-            </div>
+        <div class="col-12 plate d-flex justify-content-center mt-3 table-header">
+          <div class="text-center table-header">
+            <h3 class="table-tittle">Documentos</h3>
+            <select name="time" class="form-select" id="time">
+              <option value="">Expediente [año1 - año2]</option>
+            </select>
           </div>
+        </div>
         <div class="table-responsive table-responsive1">
           <table class="table table-striped" id="tablaCartera">
             <thead>
@@ -471,44 +510,43 @@
       </div>
     </div>
 
-
   </div>
   </div>
-    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/jwt-decode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/jwt-decode.min.js"></script>
   <script>
-  // Encuentra la clave del id_token en sessionStorage
-  const storageKeys = Object.keys(sessionStorage);
-  const oidcKey = storageKeys.find(k => k.startsWith("oidc.user:"));
-  let idToken = null;
+    // Encuentra la clave del id_token en sessionStorage
+    const storageKeys = Object.keys(sessionStorage);
+    const oidcKey = storageKeys.find(k => k.startsWith("oidc.user:"));
+    let idToken = null;
 
-  if (oidcKey) {
-    const userData = JSON.parse(sessionStorage.getItem(oidcKey));
-    idToken = userData.id_token;
-  }
+    if (oidcKey) {
+      const userData = JSON.parse(sessionStorage.getItem(oidcKey));
+      idToken = userData.id_token;
+    }
 
-  // Lista de correos permitidos (puedes usar username también)
-  const allowedEmails = [
-    "jeffry0414@gmail.com",
-    "admin@example.com"
-  ];
+    // Lista de correos permitidos (puedes usar username también)
+    const allowedEmails = [
+      "jeffry0414@gmail.com",
+      "admin@example.com"
+    ];
 
-  if (idToken) {
-    const decoded = jwt_decode(idToken);
-    const email = decoded.email;
+    if (idToken) {
+      const decoded = jwt_decode(idToken);
+      const email = decoded.email;
 
-    // Si no está autorizado, ocultamos el div
-    if (!allowedEmails.includes(email)) {
+      // Si no está autorizado, ocultamos el div
+      if (!allowedEmails.includes(email)) {
+        const div = document.getElementById("doc-generate-link");
+        if (div) div.style.display = "none";
+      }
+    } else {
+      // No autenticado
       const div = document.getElementById("doc-generate-link");
       if (div) div.style.display = "none";
     }
-  } else {
-    // No autenticado
-    const div = document.getElementById("doc-generate-link");
-    if (div) div.style.display = "none";
-  }
-</script>
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
- <!-- <script type="module">
+  <!-- <script type="module">
       import { userManager, signOutRedirect } from './js/auth.js';
   
       async function initAuth() {
@@ -547,6 +585,17 @@
         }
       });
     </script>-->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="docToast" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">
+          📄 Documentos generados exitosamente.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>

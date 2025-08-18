@@ -1,6 +1,7 @@
 // Asume que ya se cargó la respuesta y están en "todasLasMultas"
 
 let todosLosDocumentos = [];
+let todosLosMensajes = [];
 //quiero obtener la lista de contenerdores con clase continner
 const contenedores = document.querySelectorAll(".container");
 
@@ -56,13 +57,24 @@ async function peticion(parametro, tipo, contenedor) {
     parametroSeleccionado = parametro;
     console.log("Parámetro seleccionado:", parametroSeleccionado);
     const result = await response.json();
-    const segundoItem = result;
-    const bodyDataDocumentos =
+    console.log("Respuesta completa:", result);
+    const primerItem = result[0];
+    const segundoItem = result[1];
+    console.log(primerItem);
+    console.log(segundoItem);
+    const bodyDataMensajes =
       typeof segundoItem.body === "string"
         ? JSON.parse(segundoItem.body)
         : segundoItem.body;
 
+    const bodyDataDocumentos =
+      typeof primerItem.body === "string"
+        ? JSON.parse(primerItem.body)
+        : primerItem.body;
+    
+
     const documentos = bodyDataDocumentos.documentos || [];
+    const mensajes = bodyDataMensajes.mensajes || [];
     //quiero que hace algo para que en documentos los años y los id si tienen un .0 se remplace por un espacio vacio
     documentos.forEach((doc) => {
       if (doc.ANNO) {
@@ -77,6 +89,7 @@ async function peticion(parametro, tipo, contenedor) {
     });
 
     todosLosDocumentos = documentos;
+    todosLosMensajes = mensajes;
     console.log("Documentos obtenidos:", todosLosDocumentos);
     if (parametro === "NRO_PLACA") {
       placaSelect = contenedor.querySelector("#identifitacions");
@@ -114,6 +127,25 @@ async function peticion(parametro, tipo, contenedor) {
     document.querySelector(".plate").style.display = "block";
     llenarSelectPeriodos(); // Llenar sin placa seleccionada
     aplicarFiltros();
+
+    // Mostrar mensajes si existen
+    const contenedorMensajes = contenedor.querySelector("#bodyTableMensajes");
+    contenedorMensajes.innerHTML = ""; // Limpiar contenido previo
+    if (mensajes.length > 0) {
+      mensajes.forEach((mensaje) => {
+        const nombreCom = `${mensaje.NOMBRES || ""} ${mensaje.APELLIDOS || ""}`;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${mensaje.TIPO_MENSAJE || ""}</td>
+          <td>${mensaje.MENSAJE.replaceAll('&$',',') || ""}</td>
+          <td>${mensaje.ID_USUARIO || ""}</td>
+          <td>${nombreCom || ""}</td>
+          <td>${mensaje.CELULAR || ""}</td>
+          <td>${mensaje.FECHA_ENVIO || ""}</td>
+        `;
+        contenedorMensajes.appendChild(row);
+      });
+    }
   } catch (error) {
     console.error("Error al consultar multas:", error);
   }
