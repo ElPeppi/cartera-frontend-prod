@@ -513,78 +513,144 @@
   </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/jwt-decode.min.js"></script>
-  <script>
-    // Encuentra la clave del id_token en sessionStorage
-    const storageKeys = Object.keys(sessionStorage);
-    const oidcKey = storageKeys.find(k => k.startsWith("oidc.user:"));
-    let idToken = null;
 
-    if (oidcKey) {
-      const userData = JSON.parse(sessionStorage.getItem(oidcKey));
-      idToken = userData.id_token;
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { userManager, signOutRedirect } from './js/auth.js';
+
+    const EXPIRY_WARNING_MS = 2 * 60 * 1000; // avisar 2 minutos antes
+    const expiryTimers = { warn: null, logout: null, countdown: null };
+
+    function clearExpiryTimers() {
+      for (const k of Object.keys(expiryTimers)) {
+        if (expiryTimers[k]) { clearTimeout(expiryTimers[k]); clearInterval(expiryTimers[k]); }
+        expiryTimers[k] = null;
+      }
     }
 
-    // Lista de correos permitidos (puedes usar username también)
+    function showSessionWarning(expAtMs) {
+      const toastEl = document.getElementById('sessionToast');
+      const countdownEl = document.getElementById('sessionCountdown');
+      const toast = new bootstrap.Toast(toastEl, { autohide: false });
+      const fmt = (s) => {
+        const m = Math.floor(s / 60), r = s % 60;
+        return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+      };
+
+      const update = () => {
+        const secs = Math.max(0, Math.ceil((expAtMs - Date.now()) / 1000));
+        countdownEl.textContent = fmt(secs);
+        if (secs <= 0) {
+          toast.hide();
+        }
+      };
+
+      update();
+      expiryTimers.countdown = setInterval(update, 1000);
+      toast.show();
+
+      // Botones
+      document.getElementById('btnRenewNow')?.addEventListener('click', async () => {
+        // Redirige a login para renovar (si tienes silent renew, aquí no hace falta redirigir)
+        try { await userManager.signinRedirect(); } catch (e) { console.error(e); }
+      });
+      document.getElementById('btnLogoutNow')?.addEventListener('click', async () => {
+        try { await signOutRedirect(); } catch (e) { console.error(e); }
+      });
+    }
+
+    function scheduleExpiryWatcher(user) {
+      clearExpiryTimers();
+      const expSeconds = user?.expires_at; // epoch seconds (oidc-client-ts)
+      if (!expSeconds) return;
+
+      const expAtMs = expSeconds * 1000;
+      const now = Date.now();
+
+      // programar aviso
+      const warnAt = Math.max(0, expAtMs - EXPIRY_WARNING_MS - now);
+      expiryTimers.warn = setTimeout(() => showSessionWarning(expAtMs), warnAt);
+
+      // programar cierre de sesión automático al expirar
+      const logoutIn = Math.max(0, expAtMs - now) + 500; // +buffer
+      expiryTimers.logout = setTimeout(async () => {
+        try { await signOutRedirect(); } catch (e) { console.error(e); }
+      }, logoutIn);
+    }
+
     const allowedEmails = [
       "jeffry0414@gmail.com",
-      "admin@example.com"
+      "betsybonillad@gmail.com"
     ];
 
-    if (idToken) {
-      const decoded = jwt_decode(idToken);
-      const email = decoded.email;
+    function setDocGenerateVisibility(user) {
+      const liOrLink = document.getElementById("doc-generate-link"); // <a id="doc-generate-link">
+      if (!liOrLink) return;
 
-      // Si no está autorizado, ocultamos el div
-      if (!allowedEmails.includes(email)) {
-        const div = document.getElementById("doc-generate-link");
-        if (div) div.style.display = "none";
+      // intenta email de profile; si no, decodifica id_token
+      let email = user?.profile?.email || user?.profile?.upn;
+      if (!email && user?.id_token) {
+        try { email = jwt_decode(user.id_token).email; } catch { }
       }
-    } else {
-      // No autenticado
-      const div = document.getElementById("doc-generate-link");
-      if (div) div.style.display = "none";
+
+      // si quieres ocultar todo el <li>, usa closest('li')
+      const target = liOrLink.closest('li') || liOrLink;
+      target.style.display = (email && allowedEmails.includes(email)) ? 'block' : 'none';
     }
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- <script type="module">
-      import { userManager, signOutRedirect } from './js/auth.js';
-  
-      async function initAuth() {
-        if (window.location.search.includes("code=")) {
-          await userManager.signinRedirectCallback();
-          window.history.replaceState({}, document.title, "/");
-        }
-  
-        const user = await userManager.getUser();
-  
-        if (!user) {
-          await userManager.signinRedirect();
-        } else {
-          document.getElementById("content").style.display = "block";
-        }
+
+    async function initAuth() {
+      if (window.location.search.includes("code=")) {
+        await userManager.signinRedirectCallback();
+        window.history.replaceState({}, document.title, "/");
       }
-  
-      document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("content").style.display = "none";
-        initAuth();
-  
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) {
-          logoutBtn.addEventListener("click", () => {
-            signOutRedirect();
-          });
-        }
+
+      const user = await userManager.getUser();
+      if (!user) {
+        await userManager.signinRedirect();
+        return;
+      }
+
+      document.getElementById("content").style.display = "block";
+      setDocGenerateVisibility(user);          // lo que ya tienes
+      scheduleExpiryWatcher(user);             // 👈 NUEVO
+    }
+
+    // eventos OIDC recomendados
+    userManager.events.addUserLoaded(user => {
+      setDocGenerateVisibility(user);
+      scheduleExpiryWatcher(user);             // 👈 reprograma al renovar/cargar usuario
+    });
+
+    userManager.events.addUserUnloaded(() => {
+      clearExpiryTimers();
+    });
+
+    userManager.events.addAccessTokenExpiring(() => {
+      // algunos IdPs emiten este evento ~60s antes
+      const p = userManager.getUser().then(u => {
+        if (u?.expires_at) showSessionWarning(u.expires_at * 1000);
       });
-  
-      window.addEventListener("storage", async (event) => {
-        if (
-          event.key === `oidc.user:${userManager.settings.authority}:${userManager.settings.client_id}` &&
-          event.newValue === null
-        ) {
-          await userManager.signinRedirect();
-        }
-      });
-    </script>-->
+    });
+
+    userManager.events.addAccessTokenExpired(async () => {
+      // si llega a expirar, cerrar sesión (o redirigir a login)
+      try { await signOutRedirect(); } catch (e) { console.error(e); }
+    });
+
+    userManager.events.addSilentRenewError((e) => {
+      console.error('Silent renew error', e);
+      // si no usas silent renew, ignora; si lo usas, muestra aviso:
+      // showSessionWarning((Date.now()+60000));
+    });
+
+    document.addEventListener("DOMContentLoaded", initAuth);
+
+
+    // Logout
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", () => signOutRedirect());
+  </script>
+
   <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
     <div id="docToast" class="toast align-items-center text-bg-success border-0" role="alert">
       <div class="d-flex">
